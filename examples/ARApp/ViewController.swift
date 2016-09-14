@@ -14,24 +14,22 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
     var runLoopInterval: Int
     var runLoopTimePrevious: NSTimeInterval
     var videoPaused: Bool
-    var gVid: AR2VideoParamT?
-    var gARHandle: ARHandle?
-    var gARPattHandle: ARPattHandle?
+    var gVid: UnsafeMutablePointer<AR2VideoParamT>
+    var gARHandle: UnsafeMutablePointer<ARHandle>
+    var gARPattHandle: UnsafeMutablePointer<ARPattHandle>
     var gCallCountMarkerDetect: Int64
-    var gAR3DHandle: AR3DHandle?
+    var gAR3DHandle: UnsafeMutablePointer<AR3DHandle>
     var gPatt_width: ARdouble
     var gPatt_trans34: ARdouble
     var gPatt_found: Int32
     var gPatt_id: Int32
     var useContPoseEstimation: Bool
-    var gCparamLT: ARParamLT?
-    var glView: ARView?
-    var arglContextSettings: ARGL_CONTEXT_SETTINGS_REF?
+    var gCparamLT: UnsafeMutablePointer<ARParamLT>
+    var glView: UnsafeMutablePointer<ARView>
+    var arglContextSettings: ARGL_CONTEXT_SETTINGS_REF
     
     // ロード画面の描画
     func loadView() {
-        self.wantsFullScreenLayout = YES // フルスクリーンモード
-        
         // This will be overlaid with the actual AR view.
         var irisImage : String? = nil
         if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
@@ -44,13 +42,13 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
                 irisImage = "Iris.png"
             }
         }
-        let irisView = UIImageView.alloc(initWithImage(UIImage.imageNamed(irisImage).autorelease))
-        irisView.userInteractionEnabled = YES // タッチの検知を行う
+        let irisView = UIImageView(image:irisImage!)
+        irisView.userInteractionEnabled = true // タッチの検知を行う
         self.view = irisView
     }
     
     // 画面が表示された直後に実行される
-    func viewDidAppear(animated:Bool) {
+    func viewDidAppear(animated: Bool) {
         super.viewDidAppear(animated)
         self.start()
     }
@@ -64,7 +62,7 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
         if (!running) {
             // After starting the video, new frames will invoke cameraVideoTookPicture:userData:.
             if (ar2VideoCapStart(gVid) != 0) {
-                NSLog("Error: Unable to begin camera data capture.\n")
+                print("Error: Unable to begin camera data capture.\n")
                 self.stop()
                 return
             }
@@ -73,13 +71,13 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
     }
     
     func stopRunLoop() {
-        if running == true {
+        if (running) {
             ar2VideoCapStop(gVid)
             running = false
         }
     }
     
-    func setRunLoopInterval(interval:Int) {
+    func setRunLoopInterval(interval: Int) {
         if (interval >= 1) {
             runLoopInterval = interval
             if (running) {
@@ -91,7 +89,7 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
     
     func isPaused() -> Bool {
         if (!running) {
-            return (NO)
+            return(false)
         }
         return (videoPaused)
     }
@@ -112,10 +110,10 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
     }
     
     @IBAction func start() {
-        let vconf : CChar = nil
+        let vconf: CChar = nil
         if (gVid = ar2VideoOpenAsync(vconf, startCallback, self)) == false
         {
-            NSLog("Error: Unable to open connection to camera.\n")
+            print("Error: Unable to open connection to camera.\n")
             self.stop()
             return
         }
@@ -124,39 +122,39 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
     @IBAction func stop() {
         self.stopRunLoop()
         
-        if arglContextSettings == true {
+        if (arglContextSettings) {
             arglCleanup(arglContextSettings)
             arglContextSettings = NULL
         }
         glView.removeFromSuperview()
         glView = nil
         
-        if gARHandle == true{
+        if (gARHandle){
             arPattDetach(gARHandle)
         }
-        if gARPattHandle == true {
+        if (gARPattHandle) {
             arPattDeleteHandle(gARPattHandle)
             gARHandle = nil
         }
         arParamLTFree(gCparamLT)
-        if gVid == true {
+        if (gVid) {
             ar2VideoClose(gVid)
             gVid = nil
         }
     }
     
-    func cameraVideoTookPicture(sender:AnyObject,  userData data:AnyObject)
+    func cameraVideoTookPicture(sender: AnyObject,  userData data: AnyObject)
     {
-        var buffer : AR2VideoBufferT! = ar2VideoGetImage(gVid)
+        var buffer: AR2VideoBufferT! = ar2VideoGetImage(gVid)
         if (buffer){
             self.processFrame(buffer)
         }
     }
     
-    func processFrame(buffer: AR2VideoBufferT!) {
+    func processFrame(buffer:AR2VideoBufferT!) {
         var err : ARdouble
-        var j, k : Int
-        
+        var j : Int = 0
+        var k : Int = -1
         if (buffer)
         {
             // Upload the frame to OpenGL.
@@ -177,8 +175,8 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
             }
             // Check through the marker_info array for highest confidence
             // visible marker matching our preferred pattern.
-            k = -1
-            for (j = 0;j < gARHandle.marker_num;j++) {
+
+            while (j < gARHandle.marker_num) {
                 if (gARHandle.markerInfo[j].id == gPatt_id) {
                     if (k == -1)
                     {
@@ -189,6 +187,7 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
                         k = j // Higher confidence marker detected.
                     }
                 }
+                j += 1
             }
             
             if (k != -1)
@@ -204,19 +203,19 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
                 }
                 var modelview : [Float] = []
                 gPatt_found = true
-                glView(setCameraPose(modelview))
+                glView.setCameraPose(modelview)
             } else {
                 gPatt_found = false
-                glView(setCameraPose(nil))
+                glView.setCameraPose(nil)
             }
             
             // Get current time (units = seconds).
             var runLoopTimeNow: NSTimeInterval
             runLoopTimeNow = CFAbsoluteTimeGetCurrent()
-            glView(updateWithTimeDelta(runLoopTimeNow - runLoopTimePrevious))
+            glView.updateWithTimeDelta(runLoopTimeNow - runLoopTimePrevious)
             
             // The display has changed.
-            glView(drawView(self))
+            glView.drawView(self)
             
             // Save timestamp for next loop.
             runLoopTimePrevious = runLoopTimeNow
@@ -233,7 +232,7 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
         if (!running) {
             // After starting the video, new frames will invoke cameraVideoTookPicture:userData:.
             if (ar2VideoCapStart(gVid) != 0) {
-                NSLog("Error: Unable to begin camera data capture.\n")
+                print("Error: Unable to begin camera data capture.\n")
                 self.stop()
                 return
             }
@@ -249,9 +248,9 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
     
     func start2() {
         // Find the size of the window.
-        var xsize, ysize: Int
+        var xsize, ysize: UnsafeMutablePointer<Int>
         if (ar2VideoGetSize(gVid, &xsize, &ysize) < 0) {
-            NSLog("Error: ar2VideoGetSize.\n")
+            print("Error: ar2VideoGetSize.\n")
             self.stop()
             return
         }
@@ -259,7 +258,7 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
         // Get the format in which the camera is returning pixels.
         var pixFormat = ar2VideoGetPixelFormat(gVid)
         if (pixFormat == AR_PIXEL_FORMAT_INVALID) {
-            NSLog("Error: Camera is using unsupported pixel format.\n")
+            print("Error: Camera is using unsupported pixel format.\n")
             self.stop()
             return
         }
@@ -267,7 +266,7 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
         // Work out if the front camera is being used. If it is, flip the viewing frustum for
         // 3D drawing.
         var flipV = false
-        var frontCamera: Int
+        var frontCamera: UnsafeMutablePointer<Int>
         if (ar2VideoGetParami(gVid, AR_VIDEO_PARAM_IOS_CAMERA_POSITION, &frontCamera) >= 0) {
             if (frontCamera == AR_VIDEO_IOS_CAMERA_POSITION_FRONT) {
                 flipV = true
@@ -280,12 +279,12 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
         ar2VideoSetParami(gVid, AR_VIDEO_PARAM_IOS_FOCUS, AR_VIDEO_IOS_FOCUS_0_3M) // Default is 0.3 metres. See <AR/sys/videoiPhone.h> for allowable values.
         
         // Load the camera parameters, resize for the window and init.
-        var cparam: ARParam? = ARParam()
+        var cparam: UnsafeMutablePointer<ARParam>
         if (ar2VideoGetCParam(gVid, &cparam) < 0) {
             var cparam_name: String? = "Data2/camera_para.dat"
-            NSLog("Unable to automatically determine camera parameters. Using default.\n")
+            print("Unable to automatically determine camera parameters. Using default.\n")
             if (arParamLoad(cparam_name, 1, &cparam) < 0) {
-                NSLog("Error: Unable to load parameter file %s for camera.\n", cparam_name)
+                print("Error: Unable to load parameter file %s for camera.\n", cparam_name)
                 self.stop()
                 return
             }
@@ -295,24 +294,24 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
         }
         
         if ((gCparamLT = arParamLTCreate(&cparam, AR_PARAM_LT_DEFAULT_OFFSET)) == nil) {
-            NSLog("Error: arParamLTCreate.\n")
+            print("Error: arParamLTCreate.\n")
             self.stop()
             return
         }
         
         // AR init.
         if ((gARHandle = arCreateHandle(gCparamLT)) == nil) {
-            NSLog("Error: arCreateHandle.\n")
+            print("Error: arCreateHandle.\n")
             self.stop()
             return
         }
         if (arSetPixelFormat(gARHandle, pixFormat) < 0) {
-            NSLog("Error: arSetPixelFormat.\n")
+            print("Error: arSetPixelFormat.\n")
             self.stop()
             return
         }
         if ((gAR3DHandle = ar3DCreateHandle(&gCparamLT.param)) == nil) {
-            NSLog("Error: ar3DCreateHandle.\n")
+            print("Error: ar3DCreateHandle.\n")
             self.stop()
             return
         }
@@ -321,14 +320,14 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
         // access the instance of this class to get/set some special types of information.
         var cameraVideo: CameraVideo? = ar2VideoGetNativeVideoInstanceiPhone(gVid.device.iPhone)
         if (!cameraVideo) {
-            NSLog("Error: Unable to set up AR camera: missing CameraVideo instance.\n")
+            print("Error: Unable to set up AR camera: missing CameraVideo instance.\n")
             self.stop()
             return
         }
         
         // The camera will be started by -startRunLoop.
-        cameraVideo(setTookPictureDelegate:self)
-        cameraVideo(setTookPictureDelegateUserData:nil)
+        cameraVideo(setTookPictureDelegate(self))
+        cameraVideo(setTookPictureDelegateUserData(nil))
         
         // Other ARToolKit setup.
         arSetMarkerExtractionMode(gARHandle, AR_USE_TRACKING_HISTORY_V2)
@@ -336,7 +335,7 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
         //arSetLabelingThreshMode(gARHandle, AR_LABELING_THRESH_MODE_MANUAL) // Uncomment to use  manual thresholding.
         
         // Allocate the OpenGL view.
-        glView = ARView.alloc().initWithFrame(UIScreen.mainScreen().bounds (pixelFormat:kEAGLColorFormatRGBA8, depthFormat:kEAGLDepth16, withStencil:NO, preserveBackbuffer:NO).autorelease) // Don't retain it, as it will be retained when added to self.view.
+        glView = ARView.alloc().initWithFrame(UIScreen.mainScreen().bounds(pixelFormat(kEAGLColorFormatRGBA8), depthFormat(kEAGLDepth16), withStencil(false), preserveBackbuffer(false)).autorelease) // Don't retain it, as it will be retained when added to self.view.
         glView.arViewController = self
         self.view(addSubview(glView))
         
@@ -344,7 +343,7 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
         // If flipV is set, flip.
         var frustum: [GLfloat]
         arglCameraFrustumRHf(&gCparamLT.param, VIEW_DISTANCE_MIN, VIEW_DISTANCE_MAX, frustum)
-        glView(setCameraLens:frustum)
+        glView.setCameraLens(frustum)
         glView.contentFlipV = flipV
         
         // Set up content positioning.
@@ -367,13 +366,13 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
         if (flipV) {
             arglSetFlipV(arglContextSettings, true)
         }
-        var width, height: Int?
+        var width, height: UnsafeMutablePointer<Stirng?>
         ar2VideoGetBufferSize(gVid, &width, &height)
         arglPixelBufferSizeSet(arglContextSettings, width, height)
         
         // Prepare ARToolKit to load patterns.
         if (!(gARPattHandle = arPattCreateHandle())) {
-            NSLog("Error: arPattCreateHandle.\n")
+            print("Error: arPattCreateHandle.\n")
             self.stop()
             return
         }
@@ -381,9 +380,9 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
         
         // Load marker(s).
         // Loading only 1 pattern in this example.
-        var patt_name: String?  = "Data2/hiro.patt"
+        var patt_name: String = "Data2/hiro.patt"
         if ((gPatt_id = arPattLoad(gARPattHandle, patt_name)) < 0) {
-            NSLog("Error loading pattern file %s.\n", patt_name)
+            print("Error loading pattern file \(patt_name).\n")
             self.stop()
             return
         }
@@ -401,12 +400,13 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
     
     func cameraVideoTookPicture(sender:id, userData data:UnsafeMutablePointer<void>)
     {
-        var buffer: AR2VideoBufferT? = ar2VideoGetImage(gVid)
+        var buffer: AR2VideoBufferT = ar2VideoGetImage(gVid)
         if (buffer) {
             self.processFrame(buffer)
         }
     }
     
+    // Viewが画面から消える直前に呼び出される
     func viewWillDisappear(animated:Bool) {
         self.stop()
         super.viewWillDisappear(animated)
@@ -418,7 +418,7 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
     
     // ARToolKit-specific methods.
     func markersHaveWhiteBorders() -> Bool {
-        var mode: Int?
+        var mode: UnsafeMutablePointer<Int>
         arGetLabelingMode(gARHandle, &mode)
         return (mode == AR_LABELING_WHITE_REGION)
     }
@@ -453,11 +453,11 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
             AudioServicesCreateSystemSoundID(NSBundle.mainBundle().URLForResource("slr_camera_shutter").withExtension("wav") as CFURLRef, &shutterSound)
             AudioServicesPlaySystemSound(shutterSound)
         } else {
-            var titleString: String? = "Error saving screenshot"
-            var messageString: Stirng? = error.localizedDescription()
-            var moreString: String? = error.localizedFailureReason() ? error.localizedFailureReason() : NSLocalizedString("Please try again.", nil)
+            var titleString: String = "Error saving screenshot"
+            var messageString: Stirng = error.localizedDescription
+            var moreString: String = error.localizedFailureReason ? error.localizedFailureReason : NSLocalizedString("Please try again.", nil)
             messageString = NSString.stringWithFormat("%@. %@", messageString, moreString)
-            var alertView: UIAlertView? = UIAlertView.alloc(initWithTitle(titleString), message(messageString), delegate(self), cancelButtonTitle("OK"), otherButtonTitles(nil))
+            var alertView: UIAlertView? = UIAlertView.alloc(initWithTitle(titleString!), message(messageString), delegate(self), cancelButtonTitle("OK"), otherButtonTitles(nil))
             alertView.show()
             alertView.release()
         }
@@ -471,19 +471,13 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
     var runLoopInterval: Int
     var markersHaveWhiteBorders: Bool
     
+    // Viewが初めて呼び出されるとき一回呼ばれる
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
         // 変数の初期化
-        glView = nil
-        gVid = nil
-        gCparamLT = nil
-        gARHandle = nil
-        gARPattHandle = nil
         gCallCountMarkerDetect = 0
-        gAR3DHandle = nil
         useContPoseEstimation = false
-        arglContextSettings = nil
         running = false
         videoPaused = false
         runLoopTimePrevious = CFAbsoluteTimeGetCurrent()

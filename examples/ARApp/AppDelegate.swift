@@ -8,7 +8,7 @@
 
 import UIKit
 
-@UIApplicationMain
+//@UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
         
     @IBOutlet var window: UIWindow!
@@ -53,7 +53,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     
     func dealloc() {
         viewController.release()
-        window.release
+        window.release()
         super.dealloc()
     }
 
