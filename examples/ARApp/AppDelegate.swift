@@ -19,7 +19,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Override point for customization after application launch.
         
         // Set working directory so that camera parameters, models etc. can be loaded using relative paths.
-        //arUtilChangeToResourcesDirectory(AR_UTIL_RESOURCES_DIRECTORY_BEHAVIOR_BEST, nil)
+        arUtilChangeToResourcesDirectory(AR_UTIL_RESOURCES_DIRECTORY_BEHAVIOR(rawValue: AR_UTIL_RESOURCES_DIRECTORY_BEHAVIOR_BEST.rawValue), nil)
         
         
         self.window.rootViewController = self.viewController
@@ -59,7 +59,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     
     // メモリの開放
     deinit {
-        viewController.dealloc()
+        self.viewController = nil
         self.window = nil
     }
 
