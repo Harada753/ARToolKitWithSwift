@@ -9,4 +9,7 @@
 import Foundation
 import UIKit
 
-exit(UIApplicationMain(Process.argc, Process.unsafeArgv, nil, nil))
+exit(UIApplicationMain(CommandLine.argc,
+                       UnsafeMutableRawPointer(CommandLine.unsafeArgv).bindMemory(to: UnsafeMutablePointer<Int8>.self, capacity: Int(CommandLine.argc)),
+                       nil,
+                       NSStringFromClass(ARAppDelegate.self)))

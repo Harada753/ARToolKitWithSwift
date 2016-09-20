@@ -192,7 +192,6 @@
 		4A221CF7134CA0770054BB06 /* Icon-Small.png in Resources */ = {isa = PBXBuildFile; fileRef = 4A221CF2134CA0770054BB06 /* Icon-Small.png */; };
 		4A221CF8134CA0770054BB06 /* Icon-Small@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 4A221CF3134CA0770054BB06 /* Icon-Small@2x.png */; };
 		4A221CF9134CA0770054BB06 /* Icon@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 4A221CF4134CA0770054BB06 /* Icon@2x.png */; };
-		4A26CDA2116B59F10078D207 /* MainWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 4A26CDA1116B59F10078D207 /* MainWindow.xib */; };
 		4A2F70FF11773A3000F35FA7 /* Iris.png in Resources */ = {isa = PBXBuildFile; fileRef = 4A2F70FE11773A3000F35FA7 /* Iris.png */; };
 		4A2F715E117747A300F35FA7 /* Icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 4A2F715D117747A300F35FA7 /* Icon.png */; };
 		4A2F72F1117840A600F35FA7 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4A1822E30DC97C2700B73A53 /* QuartzCore.framework */; };
@@ -922,7 +921,10 @@
 		4AF9712B1B5F5709001BFEB5 /* timers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4AF9706A1B5F5708001BFEB5 /* timers.cpp */; };
 		4AF9712D1B5F5709001BFEB5 /* freak.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4AF970771B5F5708001BFEB5 /* freak.cpp */; };
 		4AF9712E1B5F5709001BFEB5 /* hough_similarity_voting.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4AF9707A1B5F5708001BFEB5 /* hough_similarity_voting.cpp */; };
-		90F00DEF1D89147400C9E04B /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 90F00DEE1D89147400C9E04B /* main.m */; };
+		9034833A1D90B65500D562EE /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 903483391D90B65500D562EE /* main.m */; };
+		9034833B1D90B94B00D562EE /* MainWindow.xib in Sources */ = {isa = PBXBuildFile; fileRef = 4A26CDA1116B59F10078D207 /* MainWindow.xib */; };
+		9034833C1D90BBDB00D562EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90191A761D88F3E300718D0D /* AppDelegate.swift */; };
+		9034833E1D90BE6300D562EE /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90191A771D88F3E300718D0D /* ViewController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -3305,11 +3307,11 @@
 		78BB3F2008E4837000D7CA2D /* video.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = video.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		78BB3F2108E4837000D7CA2D /* videoConfig.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = videoConfig.h; sourceTree = "<group>"; };
 		78BB3F5208E483CB00D7CA2D /* Data */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Data; sourceTree = "<group>"; };
-		90191A6F1D88E36100718D0D /* ARToolKit5iOS complete-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "ARToolKit5iOS complete-Bridging-Header.h"; sourceTree = "<group>"; };
 		90191A761D88F3E300718D0D /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		90191A771D88F3E300718D0D /* ViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		903483391D90B65500D562EE /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		903937551D8A5B46002570D9 /* AR-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "AR-Bridging-Header.h"; sourceTree = "<group>"; };
 		90F00DEC1D890F2E00C9E04B /* ARApp_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ARApp_Prefix.pch; sourceTree = "<group>"; };
-		90F00DEE1D89147400C9E04B /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -3963,7 +3965,7 @@
 				90191A771D88F3E300718D0D /* ViewController.swift */,
 				4A47F751116E092C00FC577E /* ARView.h */,
 				4A47F752116E092C00FC577E /* ARView.m */,
-				90191A6F1D88E36100718D0D /* ARToolKit5iOS complete-Bridging-Header.h */,
+				903937551D8A5B46002570D9 /* AR-Bridging-Header.h */,
 			);
 			name = Classes;
 			sourceTree = "<group>";
@@ -6638,7 +6640,7 @@
 			isa = PBXGroup;
 			children = (
 				90F00DEC1D890F2E00C9E04B /* ARApp_Prefix.pch */,
-				90F00DEE1D89147400C9E04B /* main.m */,
+				903483391D90B65500D562EE /* main.m */,
 			);
 			name = "Other sources";
 			sourceTree = "<group>";
@@ -7098,6 +7100,19 @@
 				TargetAttributes = {
 					4A50D6FC1164E16D00ED169B = {
 						DevelopmentTeam = GJ48EG8R4K;
+						LastSwiftMigration = 0800;
+					};
+					4A6C5E451794F4E700061A08 = {
+						LastSwiftMigration = 0800;
+					};
+					4A8689791AE5D83A00AFC5F7 = {
+						LastSwiftMigration = 0800;
+					};
+					4A941BDA1AE5D923000FA802 = {
+						LastSwiftMigration = 0800;
+					};
+					4A941C5F1AE5D9CE000FA802 = {
+						LastSwiftMigration = 0800;
 					};
 					4AD5C4490A390355003F13D4 = {
 						LastSwiftMigration = 0800;
@@ -7317,7 +7332,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4A26CDA2116B59F10078D207 /* MainWindow.xib in Resources */,
 				4A2F70FF11773A3000F35FA7 /* Iris.png in Resources */,
 				4A2F715E117747A300F35FA7 /* Icon.png in Resources */,
 				4A2F73A71178455100F35FA7 /* Data2 in Resources */,
@@ -7633,8 +7647,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9034833E1D90BE6300D562EE /* ViewController.swift in Sources */,
+				9034833C1D90BBDB00D562EE /* AppDelegate.swift in Sources */,
 				4A33B6C718ADB86D0028A979 /* EAGLView.m in Sources */,
 				4A47F753116E092C00FC577E /* ARView.m in Sources */,
+				9034833B1D90B94B00D562EE /* MainWindow.xib in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -7853,7 +7870,7 @@
 				4AF10217180BFC9900A922DE /* arLabelingSubEBZ.c in Sources */,
 				4AF101C7180BFC9100A922DE /* mDet.c in Sources */,
 				4AF10202180BFC9900A922DE /* arLabelingSubDWRCY.c in Sources */,
-				90F00DEF1D89147400C9E04B /* main.m in Sources */,
+				9034833A1D90B65500D562EE /* main.m in Sources */,
 				4AF101E4180BFC9900A922DE /* arLabelingSubDBIA3C.c in Sources */,
 				4AF101C2180BFC9100A922DE /* mAllocDup.c in Sources */,
 				4AF101F6180BFC9900A922DE /* arLabelingSubDWI3CA5551.c in Sources */,
@@ -8752,12 +8769,15 @@
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				ENABLE_BITCODE = NO;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = examples/ARApp/ARApp_Prefix.pch;
 				INFOPLIST_FILE = "examples/ARApp/ARApp-Info.plist";
 				PRODUCT_BUNDLE_IDENTIFIER = "fujixl-lab-j13-icloud.com.ARApp";
 				PRODUCT_NAME = ARApp;
 				PROVISIONING_PROFILE = "";
+				SWIFT_OBJC_BRIDGING_HEADER = "examples/ARApp/AR-Bridging-Header.h";
+				SWIFT_VERSION = 3.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -8767,12 +8787,15 @@
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				ENABLE_BITCODE = NO;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = examples/ARApp/ARApp_Prefix.pch;
 				INFOPLIST_FILE = "examples/ARApp/ARApp-Info.plist";
 				PRODUCT_BUNDLE_IDENTIFIER = "fujixl-lab-j13-icloud.com.ARApp";
 				PRODUCT_NAME = ARApp;
 				PROVISIONING_PROFILE = "";
+				SWIFT_OBJC_BRIDGING_HEADER = "examples/ARApp/AR-Bridging-Header.h";
+				SWIFT_VERSION = 3.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
@@ -8783,12 +8806,15 @@
 				CODE_SIGN_ENTITLEMENTS = examples/ARApp/dist.plist;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				ENABLE_BITCODE = NO;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = examples/ARApp/ARApp_Prefix.pch;
 				INFOPLIST_FILE = "examples/ARApp/ARApp-Info.plist";
 				PRODUCT_BUNDLE_IDENTIFIER = "fujixl-lab-j13-icloud.com.ARApp";
 				PRODUCT_NAME = ARApp;
 				PROVISIONING_PROFILE = "";
+				SWIFT_OBJC_BRIDGING_HEADER = "examples/ARApp/AR-Bridging-Header.h";
+				SWIFT_VERSION = 3.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
 			};
@@ -8843,6 +8869,7 @@
 				DSTROOT = "$(SRCROOT)";
 				INSTALL_PATH = /lib;
 				PRODUCT_NAME = ARgsub_es2;
+				SWIFT_VERSION = 3.0;
 				WARNING_CFLAGS = (
 					"-Wall",
 					"-Wno-four-char-constants",
@@ -8858,6 +8885,7 @@
 				DSTROOT = "$(SRCROOT)";
 				INSTALL_PATH = /lib;
 				PRODUCT_NAME = ARgsub_es2;
+				SWIFT_VERSION = 3.0;
 				WARNING_CFLAGS = (
 					"-Wall",
 					"-Wno-four-char-constants",
@@ -8874,6 +8902,7 @@
 				INSTALL_PATH = /lib;
 				PRODUCT_NAME = ARgsub_es2;
 				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 3.0;
 				WARNING_CFLAGS = (
 					"-Wall",
 					"-Wno-four-char-constants",
@@ -8889,6 +8918,7 @@
 				DSTROOT = "$(SRCROOT)";
 				INSTALL_PATH = /lib;
 				PRODUCT_NAME = ARICP;
+				SWIFT_VERSION = 3.0;
 				WARNING_CFLAGS = (
 					"-Wall",
 					"-Wno-four-char-constants",
@@ -8904,6 +8934,7 @@
 				DSTROOT = "$(SRCROOT)";
 				INSTALL_PATH = /lib;
 				PRODUCT_NAME = ARICP;
+				SWIFT_VERSION = 3.0;
 				WARNING_CFLAGS = (
 					"-Wall",
 					"-Wno-four-char-constants",
@@ -8920,6 +8951,7 @@
 				INSTALL_PATH = /lib;
 				PRODUCT_NAME = ARICP;
 				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 3.0;
 				WARNING_CFLAGS = (
 					"-Wall",
 					"-Wno-four-char-constants",
@@ -9091,6 +9123,7 @@
 				DSTROOT = "$(SRCROOT)";
 				INSTALL_PATH = /lib;
 				PRODUCT_NAME = ARvideo;
+				SWIFT_VERSION = 3.0;
 				WARNING_CFLAGS = (
 					"-Wall",
 					"-Wno-four-char-constants",
@@ -9106,6 +9139,7 @@
 				DSTROOT = "$(SRCROOT)";
 				INSTALL_PATH = /lib;
 				PRODUCT_NAME = ARvideo;
+				SWIFT_VERSION = 3.0;
 				WARNING_CFLAGS = (
 					"-Wall",
 					"-Wno-four-char-constants",
@@ -9122,6 +9156,7 @@
 				INSTALL_PATH = /lib;
 				PRODUCT_NAME = ARvideo;
 				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 3.0;
 				WARNING_CFLAGS = (
 					"-Wall",
 					"-Wno-four-char-constants",
@@ -9134,6 +9169,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				PRODUCT_NAME = Configure;
+				SWIFT_VERSION = 3.0;
 			};
 			name = Debug;
 		};
@@ -9141,6 +9177,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				PRODUCT_NAME = Configure;
+				SWIFT_VERSION = 3.0;
 			};
 			name = Release;
 		};
@@ -9148,6 +9185,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				PRODUCT_NAME = Configure;
+				SWIFT_VERSION = 3.0;
 			};
 			name = Distribution;
 		};
@@ -9415,6 +9453,7 @@
 				INSTALL_PATH = /lib;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "examples/ARApp/AR-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 3.0;
 				WARNING_CFLAGS = (
@@ -9434,6 +9473,7 @@
 				INSTALL_PATH = /lib;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "examples/ARApp/AR-Bridging-Header.h";
 				SWIFT_VERSION = 3.0;
 				WARNING_CFLAGS = (
 					"-Wall",
@@ -9453,6 +9493,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "examples/ARApp/AR-Bridging-Header.h";
 				SWIFT_VERSION = 3.0;
 				WARNING_CFLAGS = (
 					"-Wall",

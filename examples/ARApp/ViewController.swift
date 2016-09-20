@@ -1,6 +1,6 @@
 //
 //  ViewController.swift
-//  ARToolKitBySwift
+//  ARToolKitWithSwift
 //
 //  Created by 藤澤研究室 on 2016/07/11.
 //  Copyright © 2016年 藤澤研究室. All rights reserved.
@@ -11,39 +11,40 @@ import QuartzCore
 
 class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLViewTookSnapshotDelegate {
     var running: Bool
-    var runLoopInterval: Int
-    var runLoopTimePrevious: NSTimeInterval
+    var runLoopInterval: Int = 0
+    var runLoopTimePrevious: TimeInterval = 0.0
     var videoPaused: Bool
     var gVid: UnsafeMutablePointer<AR2VideoParamT>
     var gARHandle: UnsafeMutablePointer<ARHandle>
     var gARPattHandle: UnsafeMutablePointer<ARPattHandle>
-    var gCallCountMarkerDetect: Int64
+    var gCallCountMarkerDetect: Int64 = 0
     var gAR3DHandle: UnsafeMutablePointer<AR3DHandle>
     var gPatt_width: ARdouble
     var gPatt_trans34: ARdouble
-    var gPatt_found: Int32
-    var gPatt_id: Int32
+    var gPatt_found: Int32 = 0
+    var gPatt_id: Int32 = 0
     var useContPoseEstimation: Bool
     var gCparamLT: UnsafeMutablePointer<ARParamLT>
     var glView: UnsafeMutablePointer<ARView>
     var arglContextSettings: ARGL_CONTEXT_SETTINGS_REF
     
     // ロード画面の描画
-    func loadView() {
+    override func loadView() {
         // This will be overlaid with the actual AR view.
         var irisImage : String? = nil
         if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
             irisImage = "Iris-iPad.png"
         } else { // UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone
-            let result = UIScreen.mainScreen().bounds().size
+            let result = UIScreen.main.bounds.size
             if (result.height == 568) {
                 irisImage = "Iris-568h.png" // iPhone 5, iPod touch 5th Gen, etc.
             } else { // result.height == 480
                 irisImage = "Iris.png"
             }
         }
-        let irisView = UIImageView(image:irisImage!)
-        irisView.userInteractionEnabled = true // タッチの検知を行う
+        let myImage: UIImage = UIImage(named: irisImage!)!
+        let irisView = UIImageView(image: myImage)
+        irisView.isUserInteractionEnabled = true // タッチの検知を行う
         self.view = irisView
     }
     
@@ -468,7 +469,6 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
     private(set) var arglContextSettings: ARGL_CONTEXT_SETTINGS_REF
     private(set) var running: Bool
     var paused: Bool
-    var runLoopInterval: Int
     var markersHaveWhiteBorders: Bool
     
     // Viewが初めて呼び出されるとき一回呼ばれる
