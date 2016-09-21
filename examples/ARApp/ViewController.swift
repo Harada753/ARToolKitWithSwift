@@ -37,14 +37,20 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
     var paused: Bool
     var markersHaveWhiteBorders: Bool
     
-    
     // ツール関数群
-    func bridge<T: AnyObject>(obj: T) -> UnsafeMutableRawPointer {
-        return Unmanaged.passRetained(obj).toOpaque()
+    func bridge<T : AnyObject>(obj : T) -> UnsafeRawPointer {
+        return UnsafeRawPointer(Unmanaged.passUnretained(obj).toOpaque())
     }
     
-    // // UnsafeMutableRawPointer が指すポインタからオブジェクトを得る関数
-    func bridge<T: AnyObject>(ptr: UnsafeRawPointer) -> T {
+    func bridge<T : AnyObject>(ptr : UnsafeRawPointer) -> T {
+        return Unmanaged<T>.fromOpaque(ptr).takeUnretainedValue()
+    }
+    
+    func bridgeRetained<T : AnyObject>(obj : T) -> UnsafeRawPointer {
+        return UnsafeRawPointer(Unmanaged.passRetained(obj).toOpaque())
+    }
+    
+    func bridgeTransfer<T : AnyObject>(ptr : UnsafeRawPointer) -> T {
         return Unmanaged<T>.fromOpaque(ptr).takeRetainedValue()
     }
     
@@ -69,7 +75,7 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
     }
     
     // 画面が表示された直後に実行される
-    func viewDidAppear(animated: Bool) {
+    override func viewDidAppear(animated: Bool) {
         super.viewDidAppear(animated)
         self.start()
     }
@@ -150,7 +156,7 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
         self.stopRunLoop()
         
         if (arglContextSettings != nil) {
-            arglCleanup(arglContextSettings)
+            arglCleanup(arglContextSettings!)
             arglContextSettings = nil
         }
         glView?.removeFromSuperview()
@@ -174,7 +180,7 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
     {
         let buffer: UnsafeMutablePointer<AR2VideoBufferT> = ar2VideoGetImage(gVid)
         if (buffer != nil){
-            self.processFrame(buffer: buffer)
+            self.processFrame(buffer)
         }
     }
     
@@ -187,7 +193,7 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
             // Upload the frame to OpenGL.
             if (buffer.bufPlaneCount == 2)
             {
-                arglPixelBufferDataUploadBiPlanar(arglContextSettings, buffer.bufPlanes[0], buffer.bufPlanes[1])
+                arglPixelBufferDataUploadBiPlanar(arglContextSettings!, buffer.bufPlanes[0], buffer.bufPlanes[1])
             }
             else
             {
@@ -242,7 +248,7 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
             glView.updateWithTimeDelta(runLoopTimeNow - runLoopTimePrevious)
             
             // The display has changed.
-            glView.drawView(self)
+            glView!.drawView(self)
             
             // Save timestamp for next loop.
             runLoopTimePrevious = runLoopTimeNow
@@ -307,7 +313,7 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
         if (ar2VideoGetCParam(gVid, cparam) < 0) {
             var cparam_name: String? = "Data2/camera_para.dat"
             print("Unable to automatically determine camera parameters. Using default.\n")
-            if (arParamLoad(cparam_name, 1, cparam) < 0) {
+            if (arParamLoad(cparam_name!, 1, cparam) < 0) {
                 print("Error: Unable to load parameter file %s for camera.\n", cparam_name)
                 self.stop()
                 return
@@ -376,10 +382,10 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
         // Set up content positioning.
         glView?.contentScaleMode = ARViewContentScaleModeFill
         glView?.contentAlignMode = ARViewContentAlignModeCenter
-        glView.contentWidth = gARHandle.xsize
-        glView.contentHeight = gARHandle.ysize
-        var isBackingTallerThanWide: Bool = (glView.surfaceSize.height > glView.surfaceSize.width)
-        if (glView?.contentWidth > glView.contentHeight) {
+        glView!.contentWidth = gARHandle.xsize
+        glView!.contentHeight = gARHandle.ysize
+        var isBackingTallerThanWide: Bool = (glView!.surfaceSize.height > glView!.surfaceSize.width)
+        if (glView?.contentWidth > glView!.contentHeight) {
             glView?.contentRotate90 = isBackingTallerThanWide
         }
         else {
@@ -389,14 +395,14 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
         // Setup ARGL to draw the background video.
         arglContextSettings = arglSetupForCurrentContext(&gCparamLT.param, pixFormat)
         
-        arglSetRotate90(arglContextSettings, (glView.contentWidth > glView.contentHeight ? isBackingTallerThanWide : !isBackingTallerThanWide))
+        arglSetRotate90(arglContextSettings!, (glView!.contentWidth > glView!.contentHeight ? isBackingTallerThanWide : !isBackingTallerThanWide))
         if (flipV) {
-            arglSetFlipV(arglContextSettings, true)
+            arglSetFlipV(arglContextSettings!, true)
         }
         var width: UnsafeMutablePointer<String>
         var height: UnsafeMutablePointer<String>
         ar2VideoGetBufferSize(gVid, width, height)
-        arglPixelBufferSizeSet(arglContextSettings, width, height)
+        arglPixelBufferSizeSet(arglContextSettings!, width, height)
         
         // Prepare ARToolKit to load patterns.
         if (!(gARPattHandle = arPattCreateHandle())) {
@@ -426,16 +432,16 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
         self.startRunLoop()
     }
     
-    func cameraVideoTookPicture(sender:id, userData data:UnsafeMutablePointer<void>)
+    func cameraVideoTookPicture(sender:AnyObject, userData data:UnsafeMutablePointer<void>)
     {
         var buffer: AR2VideoBufferT = ar2VideoGetImage(gVid)
         if (buffer != nil) {
-            self.processFrame(buffer: buffer)
+            self.processFrame(buffer)
         }
     }
     
     // Viewが画面から消える直前に呼び出される
-    func viewWillDisappear(animated:Bool) {
+    override func viewWillDisappear(animated:Bool) {
         self.stop()
         super.viewWillDisappear(animated)
     }
@@ -444,8 +450,8 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
     func markersHaveWhiteBordersBySwift() -> Bool { // change method name
         let mode: UnsafeMutablePointer<Int32>
         arGetLabelingMode(gARHandle, mode)
-        let modeByRaw = UnsafeRawPointer(mode)
-        let res: Int = bridge(ptr: modeByRaw)
+        var modeByRaw = UnsafeRawPointer(mode)
+        let res = bridge(ptr: modeByRaw)
         return (res == AR_LABELING_WHITE_REGION)
     }
 

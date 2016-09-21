@@ -86,7 +86,7 @@
     
     // Drawing.
     ARParamLT      *gCparamLT;
-    ARView         *glView;
+    ARView         *glView;r
     ARGL_CONTEXT_SETTINGS_REF arglContextSettings;
 }
 
