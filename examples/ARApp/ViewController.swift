@@ -13,13 +13,19 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
     var runLoopInterval: Int = 0
     var runLoopTimePrevious: TimeInterval = 0.0
     var videoPaused: Bool
+    
+    // Video acquisition
     var gVid: UnsafeMutablePointer<AR2VideoParamT>
+    
+    // Marker detection.
     var gARHandle: UnsafeMutablePointer<ARHandle>
     var gARPattHandle: UnsafeMutablePointer<ARPattHandle>
-    var gCallCountMarkerDetect: Int64 = 0
+    var gCallCountMarkerDetect: Int = 0
+    
+    // Transformation matrix retrieval.
     var gAR3DHandle: UnsafeMutablePointer<AR3DHandle>
-    var gPatt_width: ARdouble
-    var gPatt_trans34: ARdouble
+    var gPatt_width: ARdouble = 0.0
+    var gPatt_trans34: ARdouble = 0.0
     var gPatt_found: Int32 = 0
     var gPatt_id: Int32 = 0
     var useContPoseEstimation: Bool
@@ -30,6 +36,17 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
     private(set) var running: Bool
     var paused: Bool
     var markersHaveWhiteBorders: Bool
+    
+    
+    // ツール関数群
+    func bridge<T: AnyObject>(obj: T) -> UnsafeMutableRawPointer {
+        return Unmanaged.passRetained(obj).toOpaque()
+    }
+    
+    // // UnsafeMutableRawPointer が指すポインタからオブジェクトを得る関数
+    func bridge<T: AnyObject>(ptr: UnsafeRawPointer) -> T {
+        return Unmanaged<T>.fromOpaque(ptr).takeRetainedValue()
+    }
     
     // ロード画面の描画
     override func loadView() {
@@ -58,8 +75,8 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
     }
     
     // On iOS 6.0 and later, we must explicitly report which orientations this view controller supports.
-    func supportedInterfaceOrientations() -> UIInterfaceOrientationMask {
-        return UIInterfaceOrientationMaskPortrait
+    func supportedInterfaceOrientationsBySwift() -> UIInterfaceOrientationMask { // change func name
+        return UIInterfaceOrientationMask.portrait
     }
     
     func startRunLoop() {
@@ -114,13 +131,19 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
     }
     
     @IBAction func start() {
-        let vconf: CChar? = nil
-        if (gVid = ar2VideoOpenAsync(vconf, startCallback, self)) == false
-        {
+        var vconf: UnsafeMutablePointer<CChar>
+        gVid = ar2VideoOpenAsync(&vconf, startCallback, self)
+        if (gVid != nil) {
             print("Error: Unable to open connection to camera.\n")
             self.stop()
             return
         }
+    }
+    
+    static func startCallback(userData: UnsafeMutablePointer<Void>) {
+        let vc: ViewController = (userData as? ViewController)!
+        
+        vc.start2()
     }
     
     @IBAction func stop() {
@@ -149,13 +172,13 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
     
     func cameraVideoTookPicture(sender: AnyObject,  userData data: AnyObject)
     {
-        let buffer: AR2VideoBufferT! = ar2VideoGetImage(gVid)
+        let buffer: UnsafeMutablePointer<AR2VideoBufferT> = ar2VideoGetImage(gVid)
         if (buffer != nil){
             self.processFrame(buffer: buffer)
         }
     }
     
-    func processFrame(buffer:AR2VideoBufferT!) {
+    func processFrame(buffer: UnsafeMutablePointer<AR2VideoBufferT>) {
         var err : ARdouble
         var j : Int = 0
         var k : Int = -1
@@ -214,7 +237,7 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
             }
             
             // Get current time (units = seconds).
-            var runLoopTimeNow: NSTimeInterval
+            var runLoopTimeNow:
             runLoopTimeNow = CFAbsoluteTimeGetCurrent()
             glView.updateWithTimeDelta(runLoopTimeNow - runLoopTimePrevious)
             
@@ -244,11 +267,6 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
             }
             running = true
         }
-    }
-    
-    static func startCallback(userData: void) {
-        var vc = userData as? ARViewController
-        vc.start2
     }
     
     func start2() {
@@ -423,16 +441,19 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
     }
 
     // ARToolKit-specific methods.
-    func markersHaveWhiteBorders() -> Bool {
-        var mode: UnsafeMutablePointer<Int>
+    func markersHaveWhiteBordersBySwift() -> Bool { // change method name
+        let mode: UnsafeMutablePointer<Int32>
         arGetLabelingMode(gARHandle, mode)
-        return (mode == AR_LABELING_WHITE_REGION)
+        let modeByRaw = UnsafeRawPointer(mode)
+        let res: Int = bridge(ptr: modeByRaw)
+        return (res == AR_LABELING_WHITE_REGION)
     }
 
     func setMarkersHaveWhiteBorders(markersHaveWhiteBorders:Bool) {
         arSetLabelingMode(gARHandle, (markersHaveWhiteBorders ? AR_LABELING_WHITE_REGION : AR_LABELING_BLACK_REGION))
     }
     
+    //- (void) tookSnapshot:(UIImage *)image forView:(EAGLView *)view;
     // Here you can choose what to do with the image.
     // We will save it to the iOS camera roll.
     func tookSnapshot(snapshot: UnsafeMutablePointer<UIImage>, forView view:UnsafeMutablePointer<EAGLView>) {
@@ -487,4 +508,6 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
 
     
 }
+
+
 
