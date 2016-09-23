@@ -457,18 +457,18 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
     
     // Let the user know that the image was saved by playing a shutter sound,
     // or if there was an error, put up an alert.
-    func image(image:UnsafeMutablePointer<UIImage>, didFinishSavingWithError error:UnsafeMutablePointer<NSError>, contextInfo: UnsafeMutablePointer<void>) {
-        if (!error) {
+    func image(image:UnsafeMutablePointer<UIImage>, didFinishSavingWithError error:UnsafeMutablePointer<NSError>, contextInfo: UnsafeMutablePointer<Void>) {
+        if (error != nil) {
             var shutterSound: SystemSoundID
-            AudioServicesCreateSystemSoundID(NSBundle.mainBundle().URLForResource("slr_camera_shutter").withExtension("wav") as CFURLRef, &shutterSound)
+            AudioServicesCreateSystemSoundID(NSBundle.mainBundle().URLForResource("slr_camera_shutter", withExtension: "wav") as! CFURLRef, &shutterSound)
             AudioServicesPlaySystemSound(shutterSound)
         } else {
             var titleString: String? = "Error saving screenshot"
-            var messageString: Stirng? = error.debugDescription
-            var moreString: String = error.localizedFailureReason ? error.localizedFailureReason : NSLocalizedString("Please try again.", nil)
-            messageString = NSString.stringWithFormat("%@. %@", messageString, moreString)
+            var messageString: String? = error.debugDescription
+            var moreString: String = (error[0].localizedFailureReason != nil) ? error[0].localizedFailureReason! : NSLocalizedString("Please try again.", comment: "")
+            messageString = NSString.init(format: "%@. %@", messageString!, moreString) as String
             //var alertView: UIAlertView? = UIAlertView.alloc(initWithTitle(titleString!), message(messageString), delegate(self), cancelButtonTitle("OK"), otherButtonTitles(nil))
-            var alertView: UIAlertView? = UIAlertView.init(title: titleString, message: messageString, delegate: self, cancelButtonTitle: self, otherButtonTitles: nil)
+            var alertView: UIAlertView? = UIAlertView.init(title: titleString!, message: messageString!, delegate: self, cancelButtonTitle: self, otherButtonTitles: nil)
             alertView?.show()
             //alertView?.release()
         }
