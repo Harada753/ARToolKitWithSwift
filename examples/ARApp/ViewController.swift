@@ -435,12 +435,10 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
     func markersHaveWhiteBordersBySwift() -> Bool { // change method name
         let mode: UnsafeMutablePointer<Int32>
         arGetLabelingMode(gARHandle, mode)
-        var modeByRaw = UnsafeRawPointer(mode)
-        let res = bridge(ptr: modeByRaw)
-        return (res == AR_LABELING_WHITE_REGION)
+        return (mode[0] == AR_LABELING_WHITE_REGION)
     }
-
-    func setMarkersHaveWhiteBorders(markersHaveWhiteBorders:Bool) {
+    
+    func setMarkersHaveWhiteBordersBySwift(markersHaveWhiteBorders:Bool) {
         arSetLabelingMode(gARHandle, (markersHaveWhiteBorders ? AR_LABELING_WHITE_REGION : AR_LABELING_BLACK_REGION))
     }
     
@@ -449,10 +447,10 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
     // We will save it to the iOS camera roll.
     func tookSnapshot(snapshot: UnsafeMutablePointer<UIImage>, forView view:UnsafeMutablePointer<EAGLView>) {
         // First though, unset ourselves as delegate.
-        glView.setTookSnapshotDelegate(nil)
+        glView?.tookSnapshotDelegate(nil)
     
         // Write image to camera roll.
-        UIImageWriteToSavedPhotosAlbum(snapshot, self, selector(image:didFinishSavingWithError:contextInfo:), nil)
+        UIImageWriteToSavedPhotosAlbum(snapshot[0], self, #selector(ViewController.image), nil)
     }
     
     // Let the user know that the image was saved by playing a shutter sound,
