@@ -12,5 +12,7 @@
 #import "EAGLView.h"
 #import "ARView.h"
 #import "arConfig.h"
+#import "gsub_es.h"
+#import "gsub_es2.h"
 
 #endif /* Bridging_Header_h */

@@ -11,7 +11,7 @@ import QuartzCore
 
 class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLViewTookSnapshotDelegate {
     var runLoopInterval: Int = 0
-    var runLoopTimePrevious: TimeInterval = 0.0
+    var runLoopTimePrevious: NSTimeInterval = 0.0
     var videoPaused: Bool
     
     // Video acquisition
@@ -25,43 +25,26 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
     // Transformation matrix retrieval.
     var gAR3DHandle: UnsafeMutablePointer<AR3DHandle>
     var gPatt_width: ARdouble = 0.0
-    var gPatt_trans34: ARdouble = 0.0
+    var gPatt_trans34: [[ARdouble]] = []
     var gPatt_found: Int32 = 0
     var gPatt_id: Int32 = 0
     var useContPoseEstimation: Bool
     var gCparamLT: UnsafeMutablePointer<ARParamLT>
     
-    private(set) var glView: ARView?
-    private(set) var arglContextSettings: ARGL_CONTEXT_SETTINGS_REF?
+    private(set) var glView: ARView? = nil
+    private(set) var arglContextSettings: ARGL_CONTEXT_SETTINGS_REF
     private(set) var running: Bool
     var paused: Bool
     var markersHaveWhiteBorders: Bool
-    
-    // ツール関数群
-    func bridge<T : AnyObject>(obj : T) -> UnsafeRawPointer {
-        return UnsafeRawPointer(Unmanaged.passUnretained(obj).toOpaque())
-    }
-    
-    func bridge<T : AnyObject>(ptr : UnsafeRawPointer) -> T {
-        return Unmanaged<T>.fromOpaque(ptr).takeUnretainedValue()
-    }
-    
-    func bridgeRetained<T : AnyObject>(obj : T) -> UnsafeRawPointer {
-        return UnsafeRawPointer(Unmanaged.passRetained(obj).toOpaque())
-    }
-    
-    func bridgeTransfer<T : AnyObject>(ptr : UnsafeRawPointer) -> T {
-        return Unmanaged<T>.fromOpaque(ptr).takeRetainedValue()
-    }
     
     // ロード画面の描画
     override func loadView() {
         // This will be overlaid with the actual AR view.
         var irisImage : String? = nil
-        if (UIDevice.current.userInterfaceIdiom == .pad) {
+        if (UIDevice.currentDevice().userInterfaceIdiom == .Pad) {
             irisImage = "Iris-iPad.png"
-        } else { // UIDevice.current.userInterfaceIdiom == .phone
-            let result = UIScreen.main.bounds.size
+        } else { // UIDevice.current.userInterfaceIdiom == .Phone
+            let result = UIScreen.mainScreen().bounds.size
             if (result.height == 568) {
                 irisImage = "Iris-568h.png" // iPhone 5, iPod touch 5th Gen, etc.
             } else { // result.height == 480
@@ -70,7 +53,7 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
         }
         let myImage: UIImage = UIImage(named: irisImage!)!
         let irisView = UIImageView(image: myImage)
-        irisView.isUserInteractionEnabled = true // タッチの検知を行う
+        irisView.userInteractionEnabled = true // タッチの検知を行う
         self.view = irisView
     }
     
@@ -82,7 +65,7 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
     
     // On iOS 6.0 and later, we must explicitly report which orientations this view controller supports.
     func supportedInterfaceOrientationsBySwift() -> UIInterfaceOrientationMask { // change func name
-        return UIInterfaceOrientationMask.portrait
+        return UIInterfaceOrientationMask.Portrait
     }
     
     func startRunLoop() {
@@ -104,7 +87,7 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
         }
     }
     
-    func setRunLoopInterval(interval: Int) {
+    private func setRunLoopInterval(interval: Int) {
         if (interval >= 1) {
             runLoopInterval = interval
             if (running) {
@@ -121,7 +104,7 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
         return (videoPaused)
     }
     
-    func setPaused(paused: Bool) {
+    private func setPaused(paused: Bool) {
         if (!running) {
             return
         }
@@ -156,7 +139,7 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
         self.stopRunLoop()
         
         if (arglContextSettings != nil) {
-            arglCleanup(arglContextSettings!)
+            arglCleanup(arglContextSettings)
             arglContextSettings = nil
         }
         glView?.removeFromSuperview()
@@ -169,7 +152,7 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
             arPattDeleteHandle(gARPattHandle)
             gARHandle = nil
         }
-        arParamLTFree(gCparamLT)
+        arParamLTFree(&gCparamLT)
         if (gVid != nil) {
             ar2VideoClose(gVid)
             gVid = nil
@@ -186,30 +169,32 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
     
     func processFrame(buffer: UnsafeMutablePointer<AR2VideoBufferT>) {
         var err : ARdouble
-        var j : Int = 0
-        var k : Int = -1
+        var j : Int32 = 0
+        var k : Int32 = -1
         if (buffer != nil)
         {
+            let bufPlanes0 = buffer.memory.bufPlanes[0]
+            let bufPlanes1 = buffer.memory.bufPlanes[1]
             // Upload the frame to OpenGL.
-            if (buffer.bufPlaneCount == 2)
+            if (buffer.memory.bufPlaneCount == 2)
             {
-                arglPixelBufferDataUploadBiPlanar(arglContextSettings!, buffer.bufPlanes[0], buffer.bufPlanes[1])
+                arglPixelBufferDataUploadBiPlanar(arglContextSettings, bufPlanes0, bufPlanes1)
             }
             else
             {
-                arglPixelBufferDataUpload(arglContextSettings, buffer.buff)
+                arglPixelBufferDataUploadBiPlanar(arglContextSettings, buffer.memory.buff, nil)
             }
             gCallCountMarkerDetect += 1 // Increment ARToolKit FPS counter.
             
             // Detect the markers in the video frame.
-            if (arDetectMarker(gARHandle, buffer.buff) < 0)
+            if (arDetectMarker(gARHandle, buffer.memory.buff) < 0)
             {
                 return
             }
             // Check through the marker_info array for highest confidence
             // visible marker matching our preferred pattern.
 
-            while (j < gARHandle.marker_num) {
+            while (j < gARHandle.memory.marker_num) {
                 if (gARHandle.markerInfo[j].id == gPatt_id) {
                     if (k == -1)
                     {
@@ -226,19 +211,19 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
             if (k != -1)
             {
                 // Get the transformation between the marker and the real camera into gPatt_trans.
-                if (gPatt_found && useContPoseEstimation)
+                if ((gPatt_found != 0) && useContPoseEstimation)
                 {
-                    err = arGetTransMatSquareCont(gAR3DHandle, &(gARHandle.markerInfo[k]), gPatt_trans, gPatt_width, gPatt_trans)
+                    err = arGetTransMatSquareCont(gAR3DHandle, &(gARHandle.markerInfo[k]), gPatt_trans34, gPatt_width, gPatt_trans34)
                 }
                 else
                 {
-                    err = arGetTransMatSquare(gAR3DHandle, &(gARHandle.markerInfo[k]), gPatt_width, gPatt_trans)
+                    err = arGetTransMatSquare(gAR3DHandle, &(gARHandle.markerInfo[k]), gPatt_width, gPatt_trans34)
                 }
                 var modelview : [Float] = []
-                gPatt_found = true
+                gPatt_found = 1
                 glView.setCameraPose(modelview)
             } else {
-                gPatt_found = false
+                gPatt_found = 0
                 glView.setCameraPose(nil)
             }
             
