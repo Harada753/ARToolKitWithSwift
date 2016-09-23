@@ -37,6 +37,9 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
     var paused: Bool
     var markersHaveWhiteBorders: Bool
     
+    let VIEW_DISTANCE_MIN: Float = 5.0
+    let VIEW_DISTANCE_MAX: Float = 2000.0
+    
     // ロード画面の描画
     override func loadView() {
         // This will be overlaid with the actual AR view.
@@ -282,7 +285,7 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
         var flipV: Bool = false
         var frontCamera: UnsafeMutablePointer<Int32>
         if (ar2VideoGetParami(gVid, Int32(AR_VIDEO_PARAM_IOS_CAMERA_POSITION), frontCamera) >= 0) {
-            if (frontCamera == AR_VIDEO_IOS_CAMERA_POSITION_FRONT.rawValue) {
+            if (frontCamera[0] == AR_VIDEO_IOS_CAMERA_POSITION_FRONT.rawValue) {
                 flipV = true
             }
         }
@@ -298,14 +301,14 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
         if (ar2VideoGetCParam(gVid, cparam) < 0) {
             var cparam_name: String? = "Data2/camera_para.dat"
             print("Unable to automatically determine camera parameters. Using default.\n")
-            if (arParamLoad(cparam_name!, 1, cparam) < 0) {
+            if (arParamLoadFromBuffer(cparam_name!, 1, cparam) < 0) {
                 print("Error: Unable to load parameter file %s for camera.\n", cparam_name)
                 self.stop()
                 return
             }
         }
-        if (cparam.xsize != xsize || cparam.ysize != ysize) {
-            arParamChangeSize(cparam, xsize, ysize, cparam)
+        if (cparam[0].xsize != xsize[0] || cparam[0].ysize != ysize[0]) {
+            arParamChangeSize(cparam, xsize[0], ysize[0], cparam)
         }
         
         gCparamLT = arParamLTCreate(cparam, AR_PARAM_LT_DEFAULT_OFFSET)
@@ -327,7 +330,7 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
             self.stop()
             return
         }
-        gAR3DHandle = ar3DCreateHandle(&gCparamLT.param)
+        gAR3DHandle = ar3DCreateHandle(&gCparamLT[0].param)
         if (gAR3DHandle == nil) {
             print("Error: ar3DCreateHandle.\n")
             self.stop()
@@ -336,7 +339,7 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
         
         // libARvideo on iPhone uses an underlying class called CameraVideo. Here, we
         // access the instance of this class to get/set some special types of information.
-        var cameraVideo: CameraVideo? = ar2VideoGetNativeVideoInstanceiPhone(gVid.device.iPhone)
+        var cameraVideo: CameraVideo? = ar2VideoGetNativeVideoInstanceiPhone(gVid[0].device.iPhone)
         if (cameraVideo == nil) {
             print("Error: Unable to set up AR camera: missing CameraVideo instance.\n")
             self.stop()
@@ -344,8 +347,7 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
         }
         
         // The camera will be started by -startRunLoop.
-        cameraVideo(setTookPictureDelegate(self))
-        cameraVideo(setTookPictureDelegateUserData(nil))
+        cameraVideo.cameraVideoTookPicture(self, userData: nil)
         
         // Other ARToolKit setup.
         arSetMarkerExtractionMode(gARHandle, AR_USE_TRACKING_HISTORY_V2)
@@ -360,15 +362,15 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
         // Create the OpenGL projection from the calibrated camera parameters.
         // If flipV is set, flip.
         var frustum: [GLfloat]
-        arglCameraFrustumRHf(&gCparamLT.param, VIEW_DISTANCE_MIN, VIEW_DISTANCE_MAX, frustum)
+        arglCameraFrustumRHf(&gCparamLT[0].param, VIEW_DISTANCE_MIN, VIEW_DISTANCE_MAX, frustum)
         glView.setCameraLens(frustum)
         glView?.contentFlipV = flipV
         
         // Set up content positioning.
         glView?.contentScaleMode = ARViewContentScaleModeFill
         glView?.contentAlignMode = ARViewContentAlignModeCenter
-        glView!.contentWidth = gARHandle.xsize
-        glView!.contentHeight = gARHandle.ysize
+        glView!.contentWidth = gARHandle[0].xsize
+        glView!.contentHeight = gARHandle[0].ysize
         var isBackingTallerThanWide: Bool = (glView!.surfaceSize.height > glView!.surfaceSize.width)
         if (glView?.contentWidth > glView!.contentHeight) {
             glView?.contentRotate90 = isBackingTallerThanWide
@@ -378,19 +380,19 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
         }
         
         // Setup ARGL to draw the background video.
-        arglContextSettings = arglSetupForCurrentContext(&gCparamLT.param, pixFormat)
+        arglContextSettings = arglSetupForCurrentContext(&gCparamLT[0].param, pixFormat)
         
-        arglSetRotate90(arglContextSettings!, (glView!.contentWidth > glView!.contentHeight ? isBackingTallerThanWide : !isBackingTallerThanWide))
+        arglSetRotate90(arglContextSettings, (glView!.contentWidth > glView!.contentHeight ? isBackingTallerThanWide : !isBackingTallerThanWide))
         if (flipV) {
-            arglSetFlipV(arglContextSettings!, true)
+            arglSetFlipV(arglContextSettings, 1/*Objc: 1, Swift: true*/)
         }
-        var width: UnsafeMutablePointer<String>
-        var height: UnsafeMutablePointer<String>
+        var width: UnsafeMutablePointer<Int32>
+        var height: UnsafeMutablePointer<Int32>
         ar2VideoGetBufferSize(gVid, width, height)
-        arglPixelBufferSizeSet(arglContextSettings!, width, height)
-        
+        arglPixelBufferSizeSet(arglContextSettings, width[0], height[0])
+        gARPattHandle = arPattCreateHandle()
         // Prepare ARToolKit to load patterns.
-        if (!(gARPattHandle = arPattCreateHandle())) {
+        if gARPattHandle == nil {
             print("Error: arPattCreateHandle.\n")
             self.stop()
             return
@@ -400,13 +402,14 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
         // Load marker(s).
         // Loading only 1 pattern in this example.
         var patt_name: String = "Data2/hiro.patt"
-        if ((gPatt_id = arPattLoad(gARPattHandle, patt_name)) < 0) {
+        gPatt_id = arPattLoad(gARPattHandle, patt_name)
+        if gPatt_id < 0 {
             print("Error loading pattern file \(patt_name).\n")
             self.stop()
             return
         }
         gPatt_width = 40.0
-        gPatt_found = false
+        gPatt_found = 0
         
         // For FPS statistics.
         arUtilTimerReset()
@@ -415,14 +418,6 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
         //Create our runloop timer
         self.setRunLoopInterval(2) // Target 30 fps on a 60 fps device.
         self.startRunLoop()
-    }
-    
-    func cameraVideoTookPicture(sender:AnyObject, userData data:UnsafeMutablePointer<void>)
-    {
-        var buffer: AR2VideoBufferT = ar2VideoGetImage(gVid)
-        if (buffer != nil) {
-            self.processFrame(buffer)
-        }
     }
     
     // Viewが画面から消える直前に呼び出される
