@@ -15,7 +15,7 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
     var videoPaused: Bool
 
     // Video acquisition
-    var gVid: UnsafeMutablePointer<AR2VideoParamT> = UnsafeMutablePointer<AR2VideoParamT>.alloc(1)
+    var gVid: UnsafeMutablePointer<AR2VideoParamT>
 
     // Marker detection.
     var gARHandle: UnsafeMutablePointer<ARHandle>
@@ -31,7 +31,7 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
     var useContPoseEstimation: Bool
     var gCparamLT: UnsafeMutablePointer<ARParamLT>
 
-    private(set) var glView: ARView? = ARView()
+    private(set) var glView: ARView?
     private(set) var arglContextSettings: ARGL_CONTEXT_SETTINGS_REF
     private(set) var running: Bool
     var paused: Bool
@@ -135,8 +135,8 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
     }
 
     @IBAction func start() {
-        let vconf: UnsafePointer<CChar>
-        gVid = ar2VideoOpenAsync(&vconf, startCallback, self)
+        let vconf: UnsafePointer<Int8>
+        gVid = ar2VideoOpenAsync(vconf, startCallback, self)
         if (gVid != nil) {
             print("Error: Unable to open connection to camera.\n")
             self.stop()
@@ -145,7 +145,7 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
     }
 
     var startCallback = { (userData: UnsafeMutablePointer<Void>) in
-        let vc: ViewController =
+        let vc: ViewController = userData
 
     }
 
@@ -159,7 +159,7 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
         }
 
         // Get the format in which the camera is returning pixels.
-        var pixFormat = ar2VideoGetPixelFormat(gVid)
+        let pixFormat = ar2VideoGetPixelFormat(gVid)
         if (pixFormat == AR_PIXEL_FORMAT_INVALID) {
             print("Error: Camera is using unsupported pixel format.")
             self.stop()
@@ -169,7 +169,7 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
         // Work out if the front camera is being used. If it is, flip the viewing frustum for
         // 3D drawing.
         var flipV: Bool = false
-        var frontCamera: UnsafeMutablePointer<Int32>
+        let frontCamera: UnsafeMutablePointer<Int32>
         if (ar2VideoGetParami(gVid, Int32(AR_VIDEO_PARAM_IOS_CAMERA_POSITION), frontCamera) >= 0) {
 
             if (frontCamera[0] == AR_VIDEO_IOS_CAMERA_POSITION_FRONT.rawValue) {
@@ -184,9 +184,9 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
         // Default is 0.3 metres. See <AR/sys/videoiPhone.h> for allowable values.
 
         // Load the camera parameters, resize for the window and init.
-        var cparam: UnsafeMutablePointer<ARParam>
+        let cparam: UnsafeMutablePointer<ARParam>
         if (ar2VideoGetCParam(gVid, cparam) < 0) {
-            var cparam_name: String? = "Data2/camera_para.dat"
+            let cparam_name: String? = "Data2/camera_para.dat"
             print("Unable to automatically determine camera parameters. Using default.\n")
             if (arParamLoadFromBuffer(cparam_name!, 1, cparam) < 0) {
                 print("Error: Unable to load parameter file %s for camera.\n", cparam_name)
@@ -226,7 +226,7 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
 
         // libARvideo on iPhone uses an underlying class called CameraVideo. Here, we
         // access the instance of this class to get/set some special types of information.
-        var cameraVideo: CameraVideo? = ar2VideoGetNativeVideoInstanceiPhone(gVid[0].device.iPhone)
+        let cameraVideo: CameraVideo? = ar2VideoGetNativeVideoInstanceiPhone(gVid[0].device.iPhone)
         if (cameraVideo == nil) {
             print("Error: Unable to set up AR camera: missing CameraVideo instance.\n")
             self.stop()
@@ -234,7 +234,8 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
         }
 
         // The camera will be started by -startRunLoop.
-        cameraVideo.cameraVideoTookPicture(self, userData: nil)
+        cameraVideo?.tookPictureDelegate = self
+        cameraVideo?.tookPictureDelegateUserData = nil
 
         // Other ARToolKit setup.
         arSetMarkerExtractionMode(gARHandle, AR_USE_TRACKING_HISTORY_V2)
@@ -242,15 +243,15 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
         //arSetLabelingThreshMode(gARHandle, AR_LABELING_THRESH_MODE_MANUAL) // Uncomment to use  manual thresholding.
 
         // Allocate the OpenGL view.
-        glView = ARView.alloc().initWithFrame(UIScreen.mainScreen().bounds(pixelFormat(kEAGLColorFormatRGBA8), depthFormat(kEAGLDepth16), withStencil(false), preserveBackbuffer(false)).autorelease) // Don't retain it, as it will be retained when added to self.view.
-        glView?.arViewController = self
-        self.view(addSubview(glView))
+        glView = ARView.init(frame: UIScreen.mainScreen().bounds, pixelFormat: kEAGLColorFormatRGBA8, depthFormat: kEAGLDepth16, withStencil: false, preserveBackbuffer: false) // Don't retain it, as it will be retained when added to self.view.
+        glView!.arViewController
+        self.view.addSubview(glView!)
 
         // Create the OpenGL projection from the calibrated camera parameters.
         // If flipV is set, flip.
-        var frustum: [GLfloat]
+        let frustum: UnsafeMutablePointer<Float>
         arglCameraFrustumRHf(&gCparamLT[0].param, VIEW_DISTANCE_MIN, VIEW_DISTANCE_MAX, frustum)
-        glView.setCameraLens(frustum)
+        glView?.cameraLens = frustum
         glView?.contentFlipV = flipV
 
         // Set up content positioning.
@@ -258,7 +259,7 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
         glView?.contentAlignMode = ARViewContentAlignModeCenter
         glView!.contentWidth = gARHandle[0].xsize
         glView!.contentHeight = gARHandle[0].ysize
-        var isBackingTallerThanWide: Bool = (glView!.surfaceSize.height > glView!.surfaceSize.width)
+        let isBackingTallerThanWide: Bool = glView!.surfaceSize.height > glView!.surfaceSize.width
         if (glView?.contentWidth > glView!.contentHeight) {
             glView?.contentRotate90 = isBackingTallerThanWide
         }
@@ -268,8 +269,17 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
 
         // Setup ARGL to draw the background video.
         arglContextSettings = arglSetupForCurrentContext(&gCparamLT[0].param, pixFormat)
+        
+        let temp = { () -> Int8 in
+            if (self.glView!.contentWidth > self.glView!.contentHeight) {
+                return isBackingTallerThanWide ? 1 : 0
+            }
+            else {
+                return isBackingTallerThanWide ? 0 : 1
+            }
+        }
 
-        arglSetRotate90(arglContextSettings, (glView!.contentWidth > glView!.contentHeight ? isBackingTallerThanWide : !isBackingTallerThanWide))
+        arglSetRotate90(arglContextSettings, temp())
         if (flipV) {
             arglSetFlipV(arglContextSettings, 1/*Objc: 1, Swift: true*/)
         }
@@ -371,13 +381,13 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
                 glView.setCameraPose(modelview)
             } else {
                 gPatt_found = 0
-                glView.setCameraPose(nil)
+                glView!.setCameraPose(nil)
             }
             
             // Get current time (units = seconds).
-            var runLoopTimeNow:
-                runLoopTimeNow = CFAbsoluteTimeGetCurrent()
-            glView.updateWithTimeDelta(runLoopTimeNow - runLoopTimePrevious)
+            var runLoopTimeNow: NSTimeInterval
+            runLoopTimeNow = CFAbsoluteTimeGetCurrent()
+            glView!.updateWithTimeDelta(runLoopTimeNow - runLoopTimePrevious)
             
             // The display has changed.
             glView!.drawView(self)
@@ -394,7 +404,7 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
             arglCleanup(arglContextSettings)
             arglContextSettings = nil
         }
-        glView?.removeFromSuperview()
+        glView!.removeFromSuperview()
         glView = nil
         
         if (gARHandle != nil){
@@ -422,11 +432,10 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
         super.viewWillDisappear(animated)
     }
 
-    /* メモリの解放を行いたい
+    // 解放のタイミングで呼ばれる
      deinit {
-     super.dealloc() // そもそもUIViewControllerはメモリ解放が必要なのか?
+        // super.dealloc()
      }
-     */
 
     // ARToolKit-specific methods.
     func markersHaveWhiteBordersBySwift() -> Bool { // change method name
@@ -443,7 +452,7 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
     // Once the image is ready, tookSnapshot:forview: will be called.
     func takeSnapshot() {
         // We will need to wait for OpenGL rendering to complete.
-        glView?.tookSnapshotDelegate(self)
+        glView?.tookSnapshotDelegate = self
         glView?.takeSnapshot()
     }
 
@@ -452,7 +461,7 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
     // We will save it to the iOS camera roll.
     func tookSnapshot(snapshot: UnsafeMutablePointer<UIImage>, forView view:UnsafeMutablePointer<EAGLView>) {
         // First though, unset ourselves as delegate.
-        glView?.tookSnapshotDelegate(nil)
+        glView?.tookSnapshotDelegate = nil
 
         // Write image to camera roll.
         UIImageWriteToSavedPhotosAlbum(snapshot[0], self, #selector(ViewController.image), nil)
@@ -470,10 +479,8 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
             var messageString: String? = error.debugDescription
             var moreString: String = (error[0].localizedFailureReason != nil) ? error[0].localizedFailureReason! : NSLocalizedString("Please try again.", comment: "")
             messageString = NSString.init(format: "%@. %@", messageString!, moreString) as String
-            //var alertView: UIAlertView? = UIAlertView.alloc(initWithTitle(titleString!), message(messageString), delegate(self), cancelButtonTitle("OK"), otherButtonTitles(nil))
-            var alertView: UIAlertView? = UIAlertView.init(title: titleString!, message: messageString!, delegate: self, cancelButtonTitle: self, otherButtonTitles: nil)
+            var alertView: UIAlertView? = UIAlertView.init(title: titleString!, message: messageString!, delegate: self, cancelButtonTitle: "OK", otherButtonTitles: nil)
             alertView?.show()
-            //alertView?.release()
         }
     }
 }

@@ -55,14 +55,12 @@
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "examples/ARApp/ViewController.swift"
-            timestampString = "496291222.444406"
+            filePath = "examples/ARApp/ARView.h"
+            timestampString = "496302377.71466"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "135"
-            endingLineNumber = "135"
-            landmarkName = "setPaused(paused:)"
-            landmarkType = "7">
+            startingLineNumber = "64"
+            endingLineNumber = "64">
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>
