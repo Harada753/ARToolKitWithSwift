@@ -14,5 +14,6 @@
 #import "arConfig.h"
 #import "gsub_es.h"
 #import "gsub_es2.h"
+#import "param.h"
 
 #endif /* Bridging_Header_h */

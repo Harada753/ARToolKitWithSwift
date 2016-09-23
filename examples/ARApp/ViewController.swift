@@ -15,7 +15,7 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
     var videoPaused: Bool
     
     // Video acquisition
-    var gVid: UnsafeMutablePointer<AR2VideoParamT>
+    var gVid: UnsafeMutablePointer<AR2VideoParamT> = UnsafeMutablePointer<AR2VideoParamT>.alloc(1)
     
     // Marker detection.
     var gARHandle: UnsafeMutablePointer<ARHandle>
@@ -31,7 +31,7 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
     var useContPoseEstimation: Bool
     var gCparamLT: UnsafeMutablePointer<ARParamLT>
     
-    private(set) var glView: ARView? = nil
+    private(set) var glView: ARView? = ARView()
     private(set) var arglContextSettings: ARGL_CONTEXT_SETTINGS_REF
     private(set) var running: Bool
     var paused: Bool
@@ -55,6 +55,18 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
         let irisView = UIImageView(image: myImage)
         irisView.userInteractionEnabled = true // タッチの検知を行う
         self.view = irisView
+    }
+    
+    // Viewが初めて呼び出されるとき一回呼ばれる
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        // Do any additional setup after loading the view, typically from a nib.
+        // 変数の初期化
+        gCallCountMarkerDetect = 0
+        useContPoseEstimation = false
+        running = false
+        videoPaused = false
+        runLoopTimePrevious = CFAbsoluteTimeGetCurrent()
     }
     
     // 画面が表示された直後に実行される
@@ -120,7 +132,7 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
     }
     
     @IBAction func start() {
-        var vconf: UnsafeMutablePointer<CChar>
+        let vconf: UnsafePointer<CChar>
         gVid = ar2VideoOpenAsync(&vconf, startCallback, self)
         if (gVid != nil) {
             print("Error: Unable to open connection to camera.\n")
@@ -129,140 +141,14 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
         }
     }
     
-    static func startCallback(userData: UnsafeMutablePointer<Void>) {
-        let vc: ViewController = (userData as? ViewController)!
+    var startCallback = { (userData: UnsafeMutablePointer<Void>) in
+        let vc: ViewController =
         
-        vc.start2()
-    }
-    
-    @IBAction func stop() {
-        self.stopRunLoop()
-        
-        if (arglContextSettings != nil) {
-            arglCleanup(arglContextSettings)
-            arglContextSettings = nil
-        }
-        glView?.removeFromSuperview()
-        glView = nil
-        
-        if (gARHandle != nil){
-            arPattDetach(gARHandle)
-        }
-        if (gARPattHandle != nil) {
-            arPattDeleteHandle(gARPattHandle)
-            gARHandle = nil
-        }
-        arParamLTFree(&gCparamLT)
-        if (gVid != nil) {
-            ar2VideoClose(gVid)
-            gVid = nil
-        }
-    }
-    
-    func cameraVideoTookPicture(sender: AnyObject,  userData data: AnyObject)
-    {
-        let buffer: UnsafeMutablePointer<AR2VideoBufferT> = ar2VideoGetImage(gVid)
-        if (buffer != nil){
-            self.processFrame(buffer)
-        }
-    }
-    
-    func processFrame(buffer: UnsafeMutablePointer<AR2VideoBufferT>) {
-        var err : ARdouble
-        var j : Int32 = 0
-        var k : Int32 = -1
-        if (buffer != nil)
-        {
-            let bufPlanes0 = buffer.memory.bufPlanes[0]
-            let bufPlanes1 = buffer.memory.bufPlanes[1]
-            // Upload the frame to OpenGL.
-            if (buffer.memory.bufPlaneCount == 2)
-            {
-                arglPixelBufferDataUploadBiPlanar(arglContextSettings, bufPlanes0, bufPlanes1)
-            }
-            else
-            {
-                arglPixelBufferDataUploadBiPlanar(arglContextSettings, buffer.memory.buff, nil)
-            }
-            gCallCountMarkerDetect += 1 // Increment ARToolKit FPS counter.
-            
-            // Detect the markers in the video frame.
-            if (arDetectMarker(gARHandle, buffer.memory.buff) < 0)
-            {
-                return
-            }
-            // Check through the marker_info array for highest confidence
-            // visible marker matching our preferred pattern.
-
-            while (j < gARHandle.memory.marker_num) {
-                if (gARHandle.markerInfo[j].id == gPatt_id) {
-                    if (k == -1)
-                    {
-                        k = j // First marker detected.
-                    }
-                    else if (gARHandle.markerInfo[j].cf > gARHandle.markerInfo[k].cf)
-                    {
-                        k = j // Higher confidence marker detected.
-                    }
-                }
-                j += 1
-            }
-            
-            if (k != -1)
-            {
-                // Get the transformation between the marker and the real camera into gPatt_trans.
-                if ((gPatt_found != 0) && useContPoseEstimation)
-                {
-                    err = arGetTransMatSquareCont(gAR3DHandle, &(gARHandle.markerInfo[k]), gPatt_trans34, gPatt_width, gPatt_trans34)
-                }
-                else
-                {
-                    err = arGetTransMatSquare(gAR3DHandle, &(gARHandle.markerInfo[k]), gPatt_width, gPatt_trans34)
-                }
-                var modelview : [Float] = []
-                gPatt_found = 1
-                glView.setCameraPose(modelview)
-            } else {
-                gPatt_found = 0
-                glView.setCameraPose(nil)
-            }
-            
-            // Get current time (units = seconds).
-            var runLoopTimeNow:
-            runLoopTimeNow = CFAbsoluteTimeGetCurrent()
-            glView.updateWithTimeDelta(runLoopTimeNow - runLoopTimePrevious)
-            
-            // The display has changed.
-            glView!.drawView(self)
-            
-            // Save timestamp for next loop.
-            runLoopTimePrevious = runLoopTimeNow
-        }
-    }
-    
-    // Call this method to take a snapshot of the ARView.
-    // Once the image is ready, tookSnapshot:forview: will be called.
-    func takeSnapshot() {
-        // We will need to wait for OpenGL rendering to complete.
-        glView?.setTookSnapshotDelegate(self)
-        glView?.takeSnapshot()
-    }
-    
-    func voidstartRunLoop() {
-        if (!running) {
-            // After starting the video, new frames will invoke cameraVideoTookPicture:userData:.
-            if (ar2VideoCapStart(gVid) != 0) {
-                print("Error: Unable to begin camera data capture.")
-                self.stop()
-                return
-            }
-            running = true
-        }
     }
     
     func start2() {
         // Find the size of the window.
-        var xsize, ysize: UnsafeMutablePointer<Int32>!
+        var xsize, ysize: UnsafeMutablePointer<Int32>
         if (ar2VideoGetSize(gVid, xsize, ysize) < 0) {
             print("Error: ar2VideoGetSize.")
             self.stop()
@@ -282,7 +168,7 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
         var flipV: Bool = false
         var frontCamera: UnsafeMutablePointer<Int32>
         if (ar2VideoGetParami(gVid, Int32(AR_VIDEO_PARAM_IOS_CAMERA_POSITION), frontCamera) >= 0) {
-            if (frontCamera == AR_VIDEO_IOS_CAMERA_POSITION_FRONT.rawValue) {
+            if (frontCamera.memory == AR_VIDEO_IOS_CAMERA_POSITION_FRONT.rawValue) {
                 flipV = true
             }
         }
@@ -298,14 +184,14 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
         if (ar2VideoGetCParam(gVid, cparam) < 0) {
             var cparam_name: String? = "Data2/camera_para.dat"
             print("Unable to automatically determine camera parameters. Using default.\n")
-            if (arParamLoad(cparam_name!, 1, cparam) < 0) {
+            if (arParamLoad(cparam_name!, 1, ) < 0) {
                 print("Error: Unable to load parameter file %s for camera.\n", cparam_name)
                 self.stop()
                 return
             }
         }
-        if (cparam.xsize != xsize || cparam.ysize != ysize) {
-            arParamChangeSize(cparam, xsize, ysize, cparam)
+        if (cparam.memory.xsize != xsize.memory || cparam.memory.ysize != ysize.memory) {
+            arParamChangeSize(cparam, xsize.memory, ysize.memory, cparam)
         }
         
         gCparamLT = arParamLTCreate(cparam, AR_PARAM_LT_DEFAULT_OFFSET)
@@ -327,7 +213,7 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
             self.stop()
             return
         }
-        gAR3DHandle = ar3DCreateHandle(&gCparamLT.param)
+        gAR3DHandle = ar3DCreateHandle(&gCparamLT.memory.param)
         if (gAR3DHandle == nil) {
             print("Error: ar3DCreateHandle.\n")
             self.stop()
@@ -336,7 +222,7 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
         
         // libARvideo on iPhone uses an underlying class called CameraVideo. Here, we
         // access the instance of this class to get/set some special types of information.
-        var cameraVideo: CameraVideo? = ar2VideoGetNativeVideoInstanceiPhone(gVid.device.iPhone)
+        var cameraVideo: CameraVideo? = ar2VideoGetNativeVideoInstanceiPhone(gVid.memory.device.iPhone)
         if (cameraVideo == nil) {
             print("Error: Unable to set up AR camera: missing CameraVideo instance.\n")
             self.stop()
@@ -417,12 +303,115 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
         self.startRunLoop()
     }
     
-    func cameraVideoTookPicture(sender:AnyObject, userData data:UnsafeMutablePointer<void>)
+    func cameraVideoTookPicture(sender: AnyObject,  userData data: AnyObject)
     {
-        var buffer: AR2VideoBufferT = ar2VideoGetImage(gVid)
-        if (buffer != nil) {
+        let buffer: UnsafeMutablePointer<AR2VideoBufferT> = ar2VideoGetImage(gVid)
+        if (buffer != nil){
             self.processFrame(buffer)
         }
+    }
+    
+    func processFrame(buffer: UnsafeMutablePointer<AR2VideoBufferT>) {
+        var err : ARdouble
+        var j : Int32 = 0
+        var k : Int32 = -1
+        if (buffer != nil)
+        {
+            let bufPlanes0 = buffer.memory.bufPlanes[0]
+            let bufPlanes1 = buffer.memory.bufPlanes[1]
+            // Upload the frame to OpenGL.
+            if (buffer.memory.bufPlaneCount == 2)
+            {
+                arglPixelBufferDataUploadBiPlanar(arglContextSettings, bufPlanes0, bufPlanes1)
+            }
+            else
+            {
+                arglPixelBufferDataUploadBiPlanar(arglContextSettings, buffer.memory.buff, nil)
+            }
+            gCallCountMarkerDetect += 1 // Increment ARToolKit FPS counter.
+            
+            // Detect the markers in the video frame.
+            if (arDetectMarker(gARHandle, buffer.memory.buff) < 0)
+            {
+                return
+            }
+            // Check through the marker_info array for highest confidence
+            // visible marker matching our preferred pattern.
+            
+            while (j < gARHandle.memory.marker_num) {
+                if (gARHandle.markerInfo[j].id == gPatt_id) {
+                    if (k == -1)
+                    {
+                        k = j // First marker detected.
+                    }
+                    else if (gARHandle.markerInfo[j].cf > gARHandle.markerInfo[k].cf)
+                    {
+                        k = j // Higher confidence marker detected.
+                    }
+                }
+                j += 1
+            }
+            
+            if (k != -1)
+            {
+                // Get the transformation between the marker and the real camera into gPatt_trans.
+                if ((gPatt_found != 0) && useContPoseEstimation)
+                {
+                    err = arGetTransMatSquareCont(gAR3DHandle, &(gARHandle.markerInfo[k]), gPatt_trans34, gPatt_width, gPatt_trans34)
+                }
+                else
+                {
+                    err = arGetTransMatSquare(gAR3DHandle, &(gARHandle.markerInfo[k]), gPatt_width, gPatt_trans34)
+                }
+                var modelview : [Float] = []
+                gPatt_found = 1
+                //glView.setCameraPose(modelview)
+                glView.
+            } else {
+                gPatt_found = 0
+                glView.setCameraPose(nil)
+            }
+            
+            // Get current time (units = seconds).
+            var runLoopTimeNow: NSTimeInterval
+            runLoopTimeNow = CFAbsoluteTimeGetCurrent()
+            glView!.updateWithTimeDelta(runLoopTimeNow - runLoopTimePrevious)
+            
+            // The display has changed.
+            glView!.drawView(self)
+            
+            // Save timestamp for next loop.
+            runLoopTimePrevious = runLoopTimeNow
+        }
+    }
+    
+    @IBAction func stop() {
+        self.stopRunLoop()
+        
+        if (arglContextSettings != nil) {
+            arglCleanup(arglContextSettings)
+            arglContextSettings = nil
+        }
+        glView?.removeFromSuperview()
+        glView = nil
+        
+        if (gARHandle != nil){
+            arPattDetach(gARHandle)
+        }
+        if (gARPattHandle != nil) {
+            arPattDeleteHandle(gARPattHandle)
+            gARHandle = nil
+        }
+        arParamLTFree(&gCparamLT)
+        if (gVid != nil) {
+            ar2VideoClose(gVid)
+            gVid = nil
+        }
+    }
+    
+    override func didReceiveMemoryWarning() {
+        super.didReceiveMemoryWarning()
+        // Dispose of any resources that can be recreated.
     }
     
     // Viewが画面から消える直前に呼び出される
@@ -430,18 +419,30 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
         self.stop()
         super.viewWillDisappear(animated)
     }
-
+    
+    /* メモリの解放を行いたい
+     deinit {
+     super.dealloc() // そもそもUIViewControllerはメモリ解放が必要なのか?
+     }
+     */
+    
     // ARToolKit-specific methods.
     func markersHaveWhiteBordersBySwift() -> Bool { // change method name
         let mode: UnsafeMutablePointer<Int32>
         arGetLabelingMode(gARHandle, mode)
-        var modeByRaw = UnsafeRawPointer(mode)
-        let res = bridge(ptr: modeByRaw)
-        return (res == AR_LABELING_WHITE_REGION)
+        return (mode.memory == AR_LABELING_WHITE_REGION)
     }
-
-    func setMarkersHaveWhiteBorders(markersHaveWhiteBorders:Bool) {
+    
+    func setMarkersHaveWhiteBordersBySwift(markersHaveWhiteBorders:Bool) {
         arSetLabelingMode(gARHandle, (markersHaveWhiteBorders ? AR_LABELING_WHITE_REGION : AR_LABELING_BLACK_REGION))
+    }
+    
+    // Call this method to take a snapshot of the ARView.
+    // Once the image is ready, tookSnapshot:forview: will be called.
+    func takeSnapshot() {
+        // We will need to wait for OpenGL rendering to complete.
+        glView?.tookSnapshotDelegate(self)
+        glView?.takeSnapshot()
     }
     
     //- (void) tookSnapshot:(UIImage *)image forView:(EAGLView *)view;
@@ -449,8 +450,8 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
     // We will save it to the iOS camera roll.
     func tookSnapshot(snapshot: UnsafeMutablePointer<UIImage>, forView view:UnsafeMutablePointer<EAGLView>) {
         // First though, unset ourselves as delegate.
-        glView.setTookSnapshotDelegate(nil)
-    
+        glView?.tookSnapshotDelegate(nil)
+        
         // Write image to camera roll.
         UIImageWriteToSavedPhotosAlbum(snapshot, self, selector(image:didFinishSavingWithError:contextInfo:), nil)
     }
@@ -473,31 +474,6 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
             //alertView?.release()
         }
     }
-    
-    // Viewが初めて呼び出されるとき一回呼ばれる
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        // Do any additional setup after loading the view, typically from a nib.
-        // 変数の初期化
-        gCallCountMarkerDetect = 0
-        useContPoseEstimation = false
-        running = false
-        videoPaused = false
-        runLoopTimePrevious = CFAbsoluteTimeGetCurrent()
-    }
-    
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
-    }
-    
-    /* メモリの解放を行いたい
-    deinit {
-        super.dealloc() // そもそもUIViewControllerはメモリ解放が必要なのか?
-    }
-    */
-
-    
 }
 
 
