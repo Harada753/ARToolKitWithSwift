@@ -922,8 +922,8 @@
 		4AF9712B1B5F5709001BFEB5 /* timers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4AF9706A1B5F5708001BFEB5 /* timers.cpp */; };
 		4AF9712D1B5F5709001BFEB5 /* freak.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4AF970771B5F5708001BFEB5 /* freak.cpp */; };
 		4AF9712E1B5F5709001BFEB5 /* hough_similarity_voting.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4AF9707A1B5F5708001BFEB5 /* hough_similarity_voting.cpp */; };
-		904FFE271D922E8900BF2857 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 904FFE261D922E5500BF2857 /* ViewController.swift */; };
-		904FFE281D922E8D00BF2857 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 904FFE251D922E4B00BF2857 /* AppDelegate.swift */; };
+		9043390C1D98A822001F34F6 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 904FFE251D922E4B00BF2857 /* AppDelegate.swift */; };
+		9043390D1D98A825001F34F6 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 904FFE261D922E5500BF2857 /* ViewController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -7636,9 +7636,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				904FFE281D922E8D00BF2857 /* AppDelegate.swift in Sources */,
-				904FFE271D922E8900BF2857 /* ViewController.swift in Sources */,
+				9043390C1D98A822001F34F6 /* AppDelegate.swift in Sources */,
 				4A33B6C718ADB86D0028A979 /* EAGLView.m in Sources */,
+				9043390D1D98A825001F34F6 /* ViewController.swift in Sources */,
 				4A47F753116E092C00FC577E /* ARView.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
