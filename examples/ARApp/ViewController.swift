@@ -382,7 +382,7 @@ class ARViewController: UIViewController, UIAlertViewDelegate, CameraVideoTookPi
                 glView?.cameraPose = modelview
             } else {
                 gPatt_found = 0
-                glView!.setCameraPose = nil
+                glView!.cameraPose = nil
             }
             
             // Get current time (units = seconds).
@@ -480,9 +480,20 @@ class ARViewController: UIViewController, UIAlertViewDelegate, CameraVideoTookPi
             var messageString: String? = error.debugDescription
             let moreString: String = (error[0].localizedFailureReason != nil) ? error[0].localizedFailureReason! : NSLocalizedString("Please try again.", comment: "")
             messageString = NSString.init(format: "%@. %@", messageString!, moreString) as String
-            // var alertView: UIAlertView? = UIAlertView.init(title: titleString!, message: messageString!, delegate: self, cancelButtonTitle: "OK", otherButtonTitles: nil)
-            let alertView: UIAlertView = UIAlertView.init(title: titleString!, message: messageString!, delegate: self, cancelButtonTitle: "OK", otherButtonTitles: "")
-            alertView.show()
+            // iOS 8.0以上
+            if #available(iOS 8.0, *) {
+                let alertView: UIAlertController = UIAlertController.init(title: titleString!, message: messageString!, preferredStyle: UIAlertControllerStyle.Alert)
+                let cancelAction: UIAlertAction = UIAlertAction.init(title: "OK", style: UIAlertActionStyle.Cancel, handler: {
+                    (action: UIAlertAction!) -> Void in
+                    print("OK")
+                })
+                alertView.addAction(cancelAction)
+                presentViewController(alertView, animated: true, completion: nil)
+            // iOS 8.0未満
+            } else {
+                let alertView: UIAlertView = UIAlertView.init(title: titleString!, message: messageString!, delegate: self, cancelButtonTitle: "OK")
+                alertView.show()
+            }
         }
     }
 }

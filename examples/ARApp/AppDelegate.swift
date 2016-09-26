@@ -12,7 +12,7 @@ import UIKit
 class ARAppDelegate: UIResponder, UIApplicationDelegate {
         
     @IBOutlet var window: UIWindow!
-    @IBOutlet var viewController: ViewController!
+    @IBOutlet var viewController: ARViewController!
 
     // アプリが起動した時の処理
     private func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {

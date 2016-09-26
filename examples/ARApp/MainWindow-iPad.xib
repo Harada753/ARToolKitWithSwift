@@ -12,7 +12,7 @@
             </connections>
         </placeholder>
         <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
-        <customObject id="4" userLabel="App Delegate" customClass="AppDelegate" customModule="ARApp" customModuleProvider="target">
+        <customObject id="4" userLabel="App Delegate" customClass="ARAppDelegate" customModule="ARApp" customModuleProvider="target">
             <connections>
                 <outlet property="viewController" destination="6" id="7"/>
                 <outlet property="window" destination="2" id="8"/>
@@ -25,7 +25,7 @@
             <nil key="simulatedStatusBarMetrics"/>
             <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
         </window>
-        <viewController autoresizesArchivedViewToFullSize="NO" wantsFullScreenLayout="YES" id="6" userLabel="AR View Controller" customClass="ViewController" customModule="ARApp" customModuleProvider="target">
+        <viewController autoresizesArchivedViewToFullSize="NO" wantsFullScreenLayout="YES" id="6" userLabel="AR View Controller" customClass="ARViewController" customModule="ARApp" customModuleProvider="target">
             <extendedEdge key="edgesForExtendedLayout"/>
             <nil key="simulatedStatusBarMetrics"/>
         </viewController>
