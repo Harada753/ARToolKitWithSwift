@@ -136,7 +136,8 @@ class ARViewController: UIViewController, UIAlertViewDelegate, CameraVideoTookPi
     
     @IBAction func start() {
         let vconf: UnsafePointer<Int8> = nil
-        gVid = ar2VideoOpenAsync(vconf, startCallback, self)
+        let ref: UnsafeMutablePointer<Void> = unsafeBitCast(self, UnsafeMutablePointer<Void>.self)
+        gVid = ar2VideoOpenAsync(vconf, startCallback, ref)
         if (gVid != nil) {
             print("Error: Unable to open connection to camera.\n")
             stop()
@@ -144,7 +145,15 @@ class ARViewController: UIViewController, UIAlertViewDelegate, CameraVideoTookPi
         }
     }
     
-    var startCallback = { (userData: UnsafeMutablePointer<Void>) in
+    /*
+    func startCallback(userData: UnsafeMutablePointer<Void>){
+        let vc: ARViewController = (userData.memory as? ARViewController)!
+        vc.start2()
+    }
+ */
+    
+    let startCallback: @convention(c) (UnsafeMutablePointer<Void>) -> Void = {
+        (userData) in
         let vc: ARViewController = (userData.memory as? ARViewController)!
         vc.start2()
     }
