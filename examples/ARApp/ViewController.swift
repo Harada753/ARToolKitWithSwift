@@ -144,7 +144,6 @@ class ARViewController: UIViewController, UIAlertViewDelegate, CameraVideoTookPi
             return
         }
     }
-    
     /*
     func startCallback(userData: UnsafeMutablePointer<Void>){
         let vc: ARViewController = (userData.memory as? ARViewController)!
@@ -255,7 +254,7 @@ class ARViewController: UIViewController, UIAlertViewDelegate, CameraVideoTookPi
         //arSetLabelingThreshMode(gARHandle, AR_LABELING_THRESH_MODE_MANUAL) // Uncomment to use  manual thresholding.
         
         // Allocate the OpenGL view.
-        glView = ARView.init(frame: UIScreen.mainScreen().bounds, pixelFormat: kEAGLColorFormatRGBA8, depthFormat: kEAGLDepth16, withStencil: false, preserveBackbuffer: false) // Don't retain it, as it will be retained when added to self.view.
+        glView.memory = ARView.init(frame: UIScreen.mainScreen().bounds, pixelFormat: kEAGLColorFormatRGBA8, depthFormat: kEAGLDepth16, withStencil: false, preserveBackbuffer: false) // Don't retain it, as it will be retained when added to self.view.
         glView.memory.arViewController = self
         view.addSubview(glView.memory)
         
@@ -363,13 +362,13 @@ class ARViewController: UIViewController, UIAlertViewDelegate, CameraVideoTookPi
             // Check through the marker_info array for highest confidence
             // visible marker matching our preferred pattern.
             while (j < Int(gARHandle.memory.marker_num)) {
-                var markInfoId_j = withUnsafeMutablePointer(&gARHandle.memory.markerInfo.0) { (markerInfoPtr) -> Int32 in
+                let markInfoId_j = withUnsafeMutablePointer(&gARHandle.memory.markerInfo.0) { (markerInfoPtr) -> Int32 in
                     return markerInfoPtr[0+j].id
                 }
-                var markInfoCf_j = withUnsafeMutablePointer(&gARHandle.memory.markerInfo.0) { (markerInfoPtr) -> ARdouble in
+                let markInfoCf_j = withUnsafeMutablePointer(&gARHandle.memory.markerInfo.0) { (markerInfoPtr) -> ARdouble in
                     return markerInfoPtr[0+j].cf
                 }
-                var markInfoCf_k = withUnsafeMutablePointer(&gARHandle.memory.markerInfo.0) { (markerinfoPtr) -> ARdouble in
+                let markInfoCf_k = withUnsafeMutablePointer(&gARHandle.memory.markerInfo.0) { (markerinfoPtr) -> ARdouble in
                     return markerinfoPtr[0+k].cf
                 }
                 if (markInfoId_j == gPatt_id) {
