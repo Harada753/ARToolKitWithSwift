@@ -25,7 +25,7 @@ class ARViewController: UIViewController, UIAlertViewDelegate, CameraVideoTookPi
     // Transformation matrix retrieval.
     var gAR3DHandle: UnsafeMutablePointer<AR3DHandle> = nil
     var gPatt_width: ARdouble = 0.0
-    var gPatt_trans34: [[ARdouble]] = [[ARdouble]]()
+    var gPatt_trans34: UnsafeMutablePointer<(ARdouble, ARdouble, ARdouble, ARdouble)> = nil
     var gPatt_found: Int32 = 0
     var gPatt_id: Int32 = 0
     var useContPoseEstimation: Bool = false
@@ -354,7 +354,7 @@ class ARViewController: UIViewController, UIAlertViewDelegate, CameraVideoTookPi
             // Check through the marker_info array for highest confidence
             // visible marker matching our preferred pattern.
             while (j < Int(gARHandle.memory.marker_num)) {
-                var markInfoId = withUnsafeMutablePointer(&gARHandle.memory.markerInfo.0) { (markerInfoPtr) -> Int32 in
+                var markInfoId_j = withUnsafeMutablePointer(&gARHandle.memory.markerInfo.0) { (markerInfoPtr) -> Int32 in
                     return markerInfoPtr[0+j].id
                 }
                 var markInfoCf_j = withUnsafeMutablePointer(&gARHandle.memory.markerInfo.0) { (markerInfoPtr) -> ARdouble in
@@ -363,13 +363,15 @@ class ARViewController: UIViewController, UIAlertViewDelegate, CameraVideoTookPi
                 var markInfoCf_k = withUnsafeMutablePointer(&gARHandle.memory.markerInfo.0) { (markerinfoPtr) -> ARdouble in
                     return markerinfoPtr[0+k].cf
                 }
-                if (k == -1)
-                {
-                    k = j // First marker detected.
-                }
-                else if (markInfoCf_j > markInfoCf_k)
-                {
-                    k = j // Higher confidence marker detected.
+                if (markInfoId_j == gPatt_id) {
+                    if (k == -1)
+                    {
+                        k = j // First marker detected.
+                    }
+                    else if (markInfoCf_j > markInfoCf_k)
+                    {
+                        k = j // Higher confidence marker detected.
+                    }
                 }
             }
             j += 1
@@ -377,16 +379,20 @@ class ARViewController: UIViewController, UIAlertViewDelegate, CameraVideoTookPi
         
         if (k != -1)
         {
+            var markInfo_k = withUnsafeMutablePointer(&gARHandle.memory.markerInfo.0) { (markerinfoPtr) -> ARMarkerInfo in
+                return markerinfoPtr[0+k]
+            }
+
             // Get the transformation between the marker and the real camera into gPatt_trans.
             if ((gPatt_found != 0) && useContPoseEstimation)
             {
-                err = arGetTransMatSquareCont(gAR3DHandle, &(gARHandle.markerInfo[k]), gPatt_trans34, gPatt_width, gPatt_trans34)
+                err = arGetTransMatSquareCont(gAR3DHandle, &markInfo_k, gPatt_trans34, gPatt_width, gPatt_trans34)
             }
             else
             {
-                err = arGetTransMatSquare(gAR3DHandle, &(gARHandle.markerInfo[k]), gPatt_width, gPatt_trans34)
+                err = arGetTransMatSquare(gAR3DHandle, &markInfo_k, gPatt_width, gPatt_trans34)
             }
-            var modelview: [Float] = []
+            let modelview: [Float] = []
             gPatt_found = 1
             glView.memory.cameraPose = UnsafeMutablePointer<Float>(modelview)
         } else {

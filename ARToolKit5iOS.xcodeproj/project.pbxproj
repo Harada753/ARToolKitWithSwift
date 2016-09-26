@@ -7096,6 +7096,7 @@
 				LastUpgradeCheck = 0800;
 				TargetAttributes = {
 					4A50D6FC1164E16D00ED169B = {
+						DevelopmentTeam = GJ48EG8R4K;
 						LastSwiftMigration = 0800;
 					};
 					4A941C5F1AE5D9CE000FA802 = {
@@ -8755,7 +8756,7 @@
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = GJ48EG8R4K;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = examples/ARApp/ARApp_Prefix.pch;
 				INFOPLIST_FILE = "examples/ARApp/ARApp-Info.plist";
@@ -8773,7 +8774,7 @@
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = GJ48EG8R4K;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = examples/ARApp/ARApp_Prefix.pch;
 				INFOPLIST_FILE = "examples/ARApp/ARApp-Info.plist";
@@ -8792,7 +8793,7 @@
 				CODE_SIGN_ENTITLEMENTS = examples/ARApp/dist.plist;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = GJ48EG8R4K;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = examples/ARApp/ARApp_Prefix.pch;
 				INFOPLIST_FILE = "examples/ARApp/ARApp-Info.plist";
