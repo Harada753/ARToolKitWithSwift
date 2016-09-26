@@ -57,7 +57,7 @@ class ARViewController: UIViewController, UIAlertViewDelegate, CameraVideoTookPi
         let myImage: UIImage = UIImage(named: irisImage!)!
         let irisView = UIImageView(image: myImage)
         irisView.userInteractionEnabled = true // タッチの検知を行う
-        self.view = irisView
+        view = irisView
     }
     
     // Viewが初めて呼び出されるとき一回呼ばれる
@@ -75,7 +75,7 @@ class ARViewController: UIViewController, UIAlertViewDelegate, CameraVideoTookPi
     // 画面が表示された直後に実行される
     override func viewDidAppear(animated: Bool) {
         super.viewDidAppear(animated)
-        self.start()
+        start()
     }
     
     // On iOS 6.0 and later, we must explicitly report which orientations this view controller supports.
@@ -88,7 +88,7 @@ class ARViewController: UIViewController, UIAlertViewDelegate, CameraVideoTookPi
             // After starting the video, new frames will invoke cameraVideoTookPicture:userData:.
             if (ar2VideoCapStart(gVid) != 0) {
                 print("Error: Unable to begin camera data capture.\n")
-                self.stop()
+                stop()
                 return
             }
             running = true
@@ -106,8 +106,8 @@ class ARViewController: UIViewController, UIAlertViewDelegate, CameraVideoTookPi
         if (interval >= 1) {
             runLoopInterval = interval
             if (running) {
-                self.stopRunLoop()
-                self.startRunLoop()
+                stopRunLoop()
+                startRunLoop()
             }
         }
     }
@@ -139,7 +139,7 @@ class ARViewController: UIViewController, UIAlertViewDelegate, CameraVideoTookPi
         gVid = ar2VideoOpenAsync(vconf, startCallback, self)
         if (gVid != nil) {
             print("Error: Unable to open connection to camera.\n")
-            self.stop()
+            stop()
             return
         }
     }
@@ -155,7 +155,7 @@ class ARViewController: UIViewController, UIAlertViewDelegate, CameraVideoTookPi
         let ysize: UnsafeMutablePointer<Int32>
         if (ar2VideoGetSize(gVid, xsize, ysize) < 0) {
             print("Error: ar2VideoGetSize.")
-            self.stop()
+            stop()
             return
         }
         
@@ -163,7 +163,7 @@ class ARViewController: UIViewController, UIAlertViewDelegate, CameraVideoTookPi
         let pixFormat = ar2VideoGetPixelFormat(gVid)
         if (pixFormat == AR_PIXEL_FORMAT_INVALID) {
             print("Error: Camera is using unsupported pixel format.")
-            self.stop()
+            stop()
             return
         }
         
@@ -191,7 +191,7 @@ class ARViewController: UIViewController, UIAlertViewDelegate, CameraVideoTookPi
             print("Unable to automatically determine camera parameters. Using default.\n")
             if (arParamLoadFromBuffer(cparam_name!, 1, cparam) < 0) {
                 print("Error: Unable to load parameter file %s for camera.\n", cparam_name)
-                self.stop()
+                stop()
                 return
             }
         }
@@ -202,7 +202,7 @@ class ARViewController: UIViewController, UIAlertViewDelegate, CameraVideoTookPi
         gCparamLT = arParamLTCreate(cparam, AR_PARAM_LT_DEFAULT_OFFSET)
         if (gCparamLT == nil) {
             print("Error: arParamLTCreate.\n")
-            self.stop()
+            stop()
             return
         }
         
@@ -210,18 +210,18 @@ class ARViewController: UIViewController, UIAlertViewDelegate, CameraVideoTookPi
         gARHandle = arCreateHandle(gCparamLT)
         if (gARHandle == nil) {
             print("Error: arCreateHandle.\n")
-            self.stop()
+            stop()
             return
         }
         if (arSetPixelFormat(gARHandle, pixFormat) < 0) {
             print("Error: arSetPixelFormat.\n")
-            self.stop()
+            stop()
             return
         }
         gAR3DHandle = ar3DCreateHandle(&gCparamLT[0].param)
         if (gAR3DHandle == nil) {
             print("Error: ar3DCreateHandle.\n")
-            self.stop()
+            stop()
             return
         }
         
@@ -232,7 +232,7 @@ class ARViewController: UIViewController, UIAlertViewDelegate, CameraVideoTookPi
         let cameraVideo: UnsafeMutablePointer<CameraVideo> = ar2VideoGetNativeVideoInstanceiPhone(iphone)
         if (cameraVideo == nil) {
             print("Error: Unable to set up AR camera: missing CameraVideo instance.\n")
-            self.stop()
+            stop()
             return
         }
         
@@ -248,7 +248,7 @@ class ARViewController: UIViewController, UIAlertViewDelegate, CameraVideoTookPi
         // Allocate the OpenGL view.
         glView = ARView.init(frame: UIScreen.mainScreen().bounds, pixelFormat: kEAGLColorFormatRGBA8, depthFormat: kEAGLDepth16, withStencil: false, preserveBackbuffer: false) // Don't retain it, as it will be retained when added to self.view.
         glView.memory.arViewController = self
-        self.view.addSubview(glView.memory)
+        view.addSubview(glView.memory)
         
         // Create the OpenGL projection from the calibrated camera parameters.
         // If flipV is set, flip.
@@ -294,7 +294,7 @@ class ARViewController: UIViewController, UIAlertViewDelegate, CameraVideoTookPi
         // Prepare ARToolKit to load patterns.
         if gARPattHandle == nil {
             print("Error: arPattCreateHandle.\n")
-            self.stop()
+            stop()
             return
         }
         arPattAttach(gARHandle, gARPattHandle)
@@ -305,7 +305,7 @@ class ARViewController: UIViewController, UIAlertViewDelegate, CameraVideoTookPi
         gPatt_id = arPattLoad(gARPattHandle, patt_name)
         if gPatt_id < 0 {
             print("Error loading pattern file \(patt_name).\n")
-            self.stop()
+            stop()
             return
         }
         gPatt_width = 40.0
@@ -316,14 +316,14 @@ class ARViewController: UIViewController, UIAlertViewDelegate, CameraVideoTookPi
         gCallCountMarkerDetect = 0
         
         //Create our runloop timer
-        self.setRunLoopInterval(2) // Target 30 fps on a 60 fps device.
-        self.startRunLoop()
+        setRunLoopInterval(2) // Target 30 fps on a 60 fps device.
+        startRunLoop()
     }
     
     func cameraVideoTookPicture(sender: AnyObject, userData data: AnyObject) {
         let buffer: UnsafeMutablePointer<AR2VideoBufferT> = ar2VideoGetImage(gVid)
         if (buffer != nil) {
-            self.processFrame(buffer)
+            processFrame(buffer)
         }
     }
     
@@ -407,7 +407,7 @@ class ARViewController: UIViewController, UIAlertViewDelegate, CameraVideoTookPi
     }
     
     @IBAction func stop() {
-        self.stopRunLoop()
+        stopRunLoop()
         
         if (arglContextSettings != nil) {
             arglCleanup(arglContextSettings)
@@ -437,7 +437,7 @@ class ARViewController: UIViewController, UIAlertViewDelegate, CameraVideoTookPi
     
     // Viewが画面から消える直前に呼び出される
     override func viewWillDisappear(animated:Bool) {
-        self.stop()
+        stop()
         super.viewWillDisappear(animated)
     }
     
