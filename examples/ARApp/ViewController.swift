@@ -9,7 +9,7 @@
 import UIKit
 import QuartzCore
 
-class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLViewTookSnapshotDelegate {
+class ARViewController: UIViewController, UIAlertViewDelegate, CameraVideoTookPictureDelegate, EAGLViewTookSnapshotDelegate {
     var runLoopInterval: Int = 0
     var runLoopTimePrevious: NSTimeInterval = 0.0
     var videoPaused: Bool
@@ -145,13 +145,14 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
     }
 
     var startCallback = { (userData: UnsafeMutablePointer<Void>) in
-        let vc: ViewController = userData
-
+        let vc: ARViewController = (userData.memory as? ARViewController)!
+        vc.start2()
     }
 
     func start2() {
         // Find the size of the window.
-        var xsize, ysize: UnsafeMutablePointer<Int32>
+        let xsize: UnsafeMutablePointer<Int32>
+        let ysize: UnsafeMutablePointer<Int32>
         if (ar2VideoGetSize(gVid, xsize, ysize) < 0) {
             print("Error: ar2VideoGetSize.")
             self.stop()
@@ -244,7 +245,7 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
 
         // Allocate the OpenGL view.
         glView = ARView.init(frame: UIScreen.mainScreen().bounds, pixelFormat: kEAGLColorFormatRGBA8, depthFormat: kEAGLDepth16, withStencil: false, preserveBackbuffer: false) // Don't retain it, as it will be retained when added to self.view.
-        glView!.arViewController
+        glView!.arViewController = self
         self.view.addSubview(glView!)
 
         // Create the OpenGL projection from the calibrated camera parameters.
@@ -283,8 +284,8 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
         if (flipV) {
             arglSetFlipV(arglContextSettings, 1/*Objc: 1, Swift: true*/)
         }
-        var width: UnsafeMutablePointer<Int32>
-        var height: UnsafeMutablePointer<Int32>
+        let width: UnsafeMutablePointer<Int32>
+        let height: UnsafeMutablePointer<Int32>
         ar2VideoGetBufferSize(gVid, width, height)
         arglPixelBufferSizeSet(arglContextSettings, width[0], height[0])
         gARPattHandle = arPattCreateHandle()
@@ -298,7 +299,7 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
 
         // Load marker(s).
         // Loading only 1 pattern in this example.
-        var patt_name: String = "Data2/hiro.patt"
+        let patt_name: String = "Data2/hiro.patt"
         gPatt_id = arPattLoad(gARPattHandle, patt_name)
         if gPatt_id < 0 {
             print("Error loading pattern file \(patt_name).\n")
@@ -376,12 +377,12 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
                 {
                     err = arGetTransMatSquare(gAR3DHandle, &(gARHandle.markerInfo[k]), gPatt_width, gPatt_trans34)
                 }
-                var modelview : [Float] = []
+                var modelview: [Float]
                 gPatt_found = 1
-                glView.setCameraPose(modelview)
+                glView?.cameraPose = modelview
             } else {
                 gPatt_found = 0
-                glView!.setCameraPose(nil)
+                glView!.setCameraPose = nil
             }
             
             // Get current time (units = seconds).
@@ -464,7 +465,7 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
         glView?.tookSnapshotDelegate = nil
 
         // Write image to camera roll.
-        UIImageWriteToSavedPhotosAlbum(snapshot[0], self, #selector(ViewController.image), nil)
+        UIImageWriteToSavedPhotosAlbum(snapshot[0], self, #selector(ARViewController.image), nil)
     }
 
     // Let the user know that the image was saved by playing a shutter sound,
@@ -475,12 +476,13 @@ class ViewController: UIViewController, CameraVideoTookPictureDelegate, EAGLView
             AudioServicesCreateSystemSoundID(NSBundle.mainBundle().URLForResource("slr_camera_shutter", withExtension: "wav") as! CFURLRef, &shutterSound)
             AudioServicesPlaySystemSound(shutterSound)
         } else {
-            var titleString: String? = "Error saving screenshot"
+            let titleString: String? = "Error saving screenshot"
             var messageString: String? = error.debugDescription
-            var moreString: String = (error[0].localizedFailureReason != nil) ? error[0].localizedFailureReason! : NSLocalizedString("Please try again.", comment: "")
+            let moreString: String = (error[0].localizedFailureReason != nil) ? error[0].localizedFailureReason! : NSLocalizedString("Please try again.", comment: "")
             messageString = NSString.init(format: "%@. %@", messageString!, moreString) as String
-            var alertView: UIAlertView? = UIAlertView.init(title: titleString!, message: messageString!, delegate: self, cancelButtonTitle: "OK", otherButtonTitles: nil)
-            alertView?.show()
+            // var alertView: UIAlertView? = UIAlertView.init(title: titleString!, message: messageString!, delegate: self, cancelButtonTitle: "OK", otherButtonTitles: nil)
+            let alertView: UIAlertView = UIAlertView.init(title: titleString!, message: messageString!, delegate: self, cancelButtonTitle: "OK", otherButtonTitles: "")
+            alertView.show()
         }
     }
 }

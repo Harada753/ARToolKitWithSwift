@@ -9,7 +9,7 @@
 import UIKit
 
 @UIApplicationMain // main.mの代わりになる
-class AppDelegate: UIResponder, UIApplicationDelegate {
+class ARAppDelegate: UIResponder, UIApplicationDelegate {
         
     @IBOutlet var window: UIWindow!
     @IBOutlet var viewController: ViewController!
