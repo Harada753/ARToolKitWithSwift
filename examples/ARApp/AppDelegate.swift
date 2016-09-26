@@ -15,7 +15,7 @@ class ARAppDelegate: UIResponder, UIApplicationDelegate {
     @IBOutlet var viewController: ARViewController!
 
     // アプリが起動した時の処理
-    private func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
+    @objc internal func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
         // Override point for customization after application launch.
         
         // Set working directory so that camera parameters, models etc. can be loaded using relative paths.

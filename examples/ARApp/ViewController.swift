@@ -153,8 +153,9 @@ class ARViewController: UIViewController, UIAlertViewDelegate, CameraVideoTookPi
     
     let startCallback: @convention(c) (UnsafeMutablePointer<Void>) -> Void = {
         (userData) in
-        let vc: ARViewController = (userData.memory as? ARViewController)!
-        vc.start2()
+        let vc: UnsafeMutablePointer<ARViewController> = unsafeBitCast(userData,
+                                                                       UnsafeMutablePointer<ARViewController>.self)
+        vc.memory.start2()
     }
     
     func start2() {
