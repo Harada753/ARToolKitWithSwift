@@ -237,7 +237,9 @@ class ARViewController: UIViewController, UIAlertViewDelegate, CameraVideoTookPi
         // libARvideo on iPhone uses an underlying class called CameraVideo. Here, we
         // access the instance of this class to get/set some special types of information.
         // let cameraVideo: CameraVideo? = ar2VideoGetNativeVideoInstanceiPhone(gVid[0].device.iPhone)
-        var cameraVideo = ar2VideoGetNativeVideoInstanceiPhone(gVid[0].device.iPhone)
+        let iphone = gVid[0].device.iPhone
+        let tmp = ar2VideoGetNativeVideoInstanceiPhone(iphone)
+        let cameraVideo: UnsafeMutablePointer<CameraVideo> = unsafeBitCast(tmp, UnsafeMutablePointer<CameraVideo>.self)
         if (cameraVideo == nil) {
             print("Error: Unable to set up AR camera: missing CameraVideo instance.\n")
             stop()
@@ -245,8 +247,8 @@ class ARViewController: UIViewController, UIAlertViewDelegate, CameraVideoTookPi
         }
         
         // The camera will be started by -startRunLoop.
-        cameraVideo.tookPictureDelegate = self
-        cameraVideo.tookPictureDelegateUserData = nil
+        cameraVideo[0].tookPictureDelegate = self
+        cameraVideo[0].tookPictureDelegateUserData = nil
         
         // Other ARToolKit setup.
         arSetMarkerExtractionMode(gARHandle, AR_USE_TRACKING_HISTORY_V2)
@@ -482,12 +484,12 @@ class ARViewController: UIViewController, UIAlertViewDelegate, CameraVideoTookPi
     //- (void) tookSnapshot:(UIImage *)image forView:(EAGLView *)view;
     // Here you can choose what to do with the image.
     // We will save it to the iOS camera roll.
-    func tookSnapshot(snapshot: UnsafeMutablePointer<UIImage>, forView view:UnsafeMutablePointer<EAGLView>) {
+    func tookSnapshot(image: UIImage, forView view: EAGLView) {
         // First though, unset ourselves as delegate.
         glView.memory.tookSnapshotDelegate = nil
         
         // Write image to camera roll.
-        UIImageWriteToSavedPhotosAlbum(snapshot[0], self, #selector(ARViewController.image), nil)
+        UIImageWriteToSavedPhotosAlbum(image, self, #selector(ARViewController.image(_:didFinishSavingWithError:contextInfo:)), nil)
     }
     
     // Let the user know that the image was saved by playing a shutter sound,
