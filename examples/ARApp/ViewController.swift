@@ -237,8 +237,7 @@ class ARViewController: UIViewController, UIAlertViewDelegate, CameraVideoTookPi
         // libARvideo on iPhone uses an underlying class called CameraVideo. Here, we
         // access the instance of this class to get/set some special types of information.
         // let cameraVideo: CameraVideo? = ar2VideoGetNativeVideoInstanceiPhone(gVid[0].device.iPhone)
-        let iphone = gVid[0].device.iPhone
-        let cameraVideo: UnsafeMutablePointer<CameraVideo> = ar2VideoGetNativeVideoInstanceiPhone(iphone)
+        var cameraVideo = ar2VideoGetNativeVideoInstanceiPhone(gVid[0].device.iPhone)
         if (cameraVideo == nil) {
             print("Error: Unable to set up AR camera: missing CameraVideo instance.\n")
             stop()
@@ -246,8 +245,8 @@ class ARViewController: UIViewController, UIAlertViewDelegate, CameraVideoTookPi
         }
         
         // The camera will be started by -startRunLoop.
-        cameraVideo[0].tookPictureDelegate = self
-        cameraVideo[0].tookPictureDelegateUserData = nil
+        cameraVideo.tookPictureDelegate = self
+        cameraVideo.tookPictureDelegateUserData = nil
         
         // Other ARToolKit setup.
         arSetMarkerExtractionMode(gARHandle, AR_USE_TRACKING_HISTORY_V2)
@@ -329,7 +328,7 @@ class ARViewController: UIViewController, UIAlertViewDelegate, CameraVideoTookPi
         startRunLoop()
     }
     
-    func cameraVideoTookPicture(sender: AnyObject, userData data: AnyObject) {
+    func cameraVideoTookPicture(sender: AnyObject, userData data: UnsafeMutablePointer<Void>) {
         let buffer: UnsafeMutablePointer<AR2VideoBufferT> = ar2VideoGetImage(gVid)
         if (buffer != nil) {
             processFrame(buffer)
