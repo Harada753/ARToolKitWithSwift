@@ -75,7 +75,7 @@ class ARViewController: UIViewController, UIAlertViewDelegate, CameraVideoTookPi
     // 画面が表示された直後に実行される
     override func viewDidAppear(animated: Bool) {
         super.viewDidAppear(animated)
-        start()
+        start2()
     }
     
     // On iOS 6.0 and later, we must explicitly report which orientations this view controller supports.
@@ -134,23 +134,24 @@ class ARViewController: UIViewController, UIAlertViewDelegate, CameraVideoTookPi
         }
     }
     
+    
     @IBAction func start() {
         let vconf: UnsafePointer<Int8> = nil
         let ref: UnsafeMutablePointer<Void> = unsafeBitCast(self, UnsafeMutablePointer<Void>.self)
         gVid = ar2VideoOpenAsync(vconf, startCallback, ref)
-        if (gVid != nil) {
+        if (gVid  != nil) {
             print("Error: Unable to open connection to camera.\n")
             stop()
             return
         }
     }
-    /*
-    func startCallback(userData: UnsafeMutablePointer<Void>){
-        let vc: ARViewController = (userData.memory as? ARViewController)!
-        vc.start2()
+
+/*
+    static func startCallback(userData: UnsafeMutablePointer<Void>){
+        let vc: UnsafeMutablePointer<ARViewController> = unsafeBitCast(userData,UnsafeMutablePointer<ARViewController>.self)
+        vc.memory.start2()
     }
- */
-    
+*/
     let startCallback: @convention(c) (UnsafeMutablePointer<Void>) -> Void = {
         (userData) in
         let vc: UnsafeMutablePointer<ARViewController> = unsafeBitCast(userData,
@@ -160,8 +161,8 @@ class ARViewController: UIViewController, UIAlertViewDelegate, CameraVideoTookPi
     
     func start2() {
         // Find the size of the window.
-        let xsize: UnsafeMutablePointer<Int32>
-        let ysize: UnsafeMutablePointer<Int32>
+        let xsize: UnsafeMutablePointer<Int32> = nil
+        let ysize: UnsafeMutablePointer<Int32> = nil
         if (ar2VideoGetSize(gVid, xsize, ysize) < 0) {
             print("Error: ar2VideoGetSize.")
             stop()
@@ -179,7 +180,7 @@ class ARViewController: UIViewController, UIAlertViewDelegate, CameraVideoTookPi
         // Work out if the front camera is being used. If it is, flip the viewing frustum for
         // 3D drawing.
         var flipV: Bool = false
-        let frontCamera: UnsafeMutablePointer<Int32>
+        let frontCamera: UnsafeMutablePointer<Int32> = nil
         if (ar2VideoGetParami(gVid, Int32(AR_VIDEO_PARAM_IOS_CAMERA_POSITION), frontCamera) >= 0) {
             
             if (frontCamera[0] == AR_VIDEO_IOS_CAMERA_POSITION_FRONT.rawValue) {
@@ -194,7 +195,7 @@ class ARViewController: UIViewController, UIAlertViewDelegate, CameraVideoTookPi
         // Default is 0.3 metres. See <AR/sys/videoiPhone.h> for allowable values.
         
         // Load the camera parameters, resize for the window and init.
-        let cparam: UnsafeMutablePointer<ARParam>
+        let cparam: UnsafeMutablePointer<ARParam> = nil
         if (ar2VideoGetCParam(gVid, cparam) < 0) {
             let cparam_name: String? = "Data2/camera_para.dat"
             print("Unable to automatically determine camera parameters. Using default.\n")
@@ -262,7 +263,7 @@ class ARViewController: UIViewController, UIAlertViewDelegate, CameraVideoTookPi
         
         // Create the OpenGL projection from the calibrated camera parameters.
         // If flipV is set, flip.
-        let frustum: UnsafeMutablePointer<Float>
+        let frustum: UnsafeMutablePointer<Float> = nil
         arglCameraFrustumRHf(&gCparamLT[0].param, VIEW_DISTANCE_MIN, VIEW_DISTANCE_MAX, frustum)
         glView.memory.cameraLens = frustum
         glView.memory.contentFlipV = flipV
@@ -296,8 +297,8 @@ class ARViewController: UIViewController, UIAlertViewDelegate, CameraVideoTookPi
         if (flipV) {
             arglSetFlipV(arglContextSettings, 1/*Objc: 1, Swift: true*/)
         }
-        let width: UnsafeMutablePointer<Int32>
-        let height: UnsafeMutablePointer<Int32>
+        let width: UnsafeMutablePointer<Int32> = nil
+        let height: UnsafeMutablePointer<Int32> = nil
         ar2VideoGetBufferSize(gVid, width, height)
         arglPixelBufferSizeSet(arglContextSettings, width[0], height[0])
         gARPattHandle = arPattCreateHandle()
@@ -464,7 +465,7 @@ class ARViewController: UIViewController, UIAlertViewDelegate, CameraVideoTookPi
     
     // ARToolKit-specific methods.
     func markersHaveWhiteBordersBySwift() -> Bool { // change method name
-        let mode: UnsafeMutablePointer<Int32>
+        let mode: UnsafeMutablePointer<Int32> = nil
         arGetLabelingMode(gARHandle, mode)
         return (mode[0] == AR_LABELING_WHITE_REGION)
     }
@@ -496,7 +497,7 @@ class ARViewController: UIViewController, UIAlertViewDelegate, CameraVideoTookPi
     // or if there was an error, put up an alert.
     func image(image:UnsafeMutablePointer<UIImage>, didFinishSavingWithError error:UnsafeMutablePointer<NSError>, contextInfo: UnsafeMutablePointer<Void>) {
         if (error != nil) {
-            var shutterSound: SystemSoundID
+            var shutterSound: SystemSoundID = 0
             AudioServicesCreateSystemSoundID(NSBundle.mainBundle().URLForResource("slr_camera_shutter", withExtension: "wav") as! CFURLRef, &shutterSound)
             AudioServicesPlaySystemSound(shutterSound)
         } else {
@@ -520,5 +521,4 @@ class ARViewController: UIViewController, UIAlertViewDelegate, CameraVideoTookPi
             }
         }
     }
-    
 }

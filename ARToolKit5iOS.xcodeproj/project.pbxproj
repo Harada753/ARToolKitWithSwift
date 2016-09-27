@@ -7095,6 +7095,9 @@
 			attributes = {
 				LastUpgradeCheck = 0800;
 				TargetAttributes = {
+					4A2F72D7117840A600F35FA7 = {
+						DevelopmentTeam = GJ48EG8R4K;
+					};
 					4A50D6FC1164E16D00ED169B = {
 						DevelopmentTeam = GJ48EG8R4K;
 						LastSwiftMigration = 0800;
@@ -8616,10 +8619,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_TEAM = GJ48EG8R4K;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = examples/ARApp2/ARApp2_Prefix.pch;
 				INFOPLIST_FILE = "examples/ARApp2/ARApp2-Info.plist";
-				PRODUCT_BUNDLE_IDENTIFIER = "ka-yomi7993-icloud.com.ARApp2";
+				PRODUCT_BUNDLE_IDENTIFIER = "fujix-lab-j13-icloud.com.ARApp2";
 				PRODUCT_NAME = ARApp2;
 				PROVISIONING_PROFILE = "";
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -8630,10 +8634,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_TEAM = GJ48EG8R4K;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = examples/ARApp2/ARApp2_Prefix.pch;
 				INFOPLIST_FILE = "examples/ARApp2/ARApp2-Info.plist";
-				PRODUCT_BUNDLE_IDENTIFIER = "ka-yomi7993-icloud.com.ARApp2";
+				PRODUCT_BUNDLE_IDENTIFIER = "fujix-lab-j13-icloud.com.ARApp2";
 				PRODUCT_NAME = ARApp2;
 				PROVISIONING_PROFILE = "";
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -8645,10 +8650,11 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = examples/ARApp2/dist.plist;
 				CODE_SIGN_IDENTITY = "iPhone Distribution";
+				DEVELOPMENT_TEAM = GJ48EG8R4K;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = examples/ARApp2/ARApp2_Prefix.pch;
 				INFOPLIST_FILE = "examples/ARApp2/ARApp2-Info.plist";
-				PRODUCT_BUNDLE_IDENTIFIER = "ka-yomi7993-icloud.com.ARApp2";
+				PRODUCT_BUNDLE_IDENTIFIER = "fujix-lab-j13-icloud.com.ARApp2";
 				PRODUCT_NAME = ARApp2;
 				PROVISIONING_PROFILE = "";
 				TARGETED_DEVICE_FAMILY = "1,2";
